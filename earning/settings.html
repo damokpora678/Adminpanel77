@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Settings</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><div class="sl-ico">🛡️</div><div><div class="sl-name">EarnPro</div><div class="sl-sub">Admin Panel</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="snav-section">Main</div>
+    <a href="dashboard.html" class="snav-item"><span class="si-ico">📊</span>Dashboard</a>
+    <a href="users.html" class="snav-item"><span class="si-ico">👥</span>Users</a>
+    <div class="snav-section">Content</div>
+    <a href="tasks.html" class="snav-item"><span class="si-ico">✅</span>Tasks</a>
+    <a href="notices.html" class="snav-item"><span class="si-ico">📢</span>Notices</a>
+    <div class="snav-section">Finance</div>
+    <a href="withdraw.html" class="snav-item"><span class="si-ico">💸</span>Withdrawals</a>
+    <div class="snav-section">Config</div>
+    <a href="settings.html" class="snav-item active"><span class="si-ico">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="admin-info"><div class="admin-av" id="adminAv">A</div><div><div class="admin-uname" id="adminName">Admin</div><div class="admin-role">🛡️ Administrator</div></div></div>
+    <button class="btn btn-ghost btn-full btn-sm" id="logoutBtn">🚪 Logout</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu-btn" id="menuBtn">☰</button><h1>⚙️ Settings</h1></div>
+    <div class="topbar-right"><span style="font-size:12px;color:var(--green)" id="saveStatus"></span></div>
+  </div>
+  <div class="content">
+
+    <!-- AD NETWORKS — TOP PRIORITY -->
+    <div class="card" style="margin-bottom:16px;border-color:rgba(168,85,247,.35)">
+      <div class="card-title" style="color:var(--pu)">📺 Ad Network URLs <span style="font-size:11px;color:var(--t3);font-weight:400;margin-left:8px">— Users see ads from these URLs when claiming rewards</span></div>
+      <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r2);padding:11px 14px;font-size:12px;color:var(--green);margin-bottom:16px;line-height:1.6">
+        ✅ System picks one URL randomly per ad view · 15-second countdown · No skip · Reward only after full watch
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="igroup">
+          <label>🔵 Adsterra URL</label>
+          <input type="url" id="cfg-adsterraUrl" class="ifield" placeholder="https://www.profitablecpmrate.com/...">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Adsterra direct / popunder / smartlink</div>
+        </div>
+        <div class="igroup">
+          <label>🟢 Monetag URL</label>
+          <input type="url" id="cfg-monetagUrl" class="ifield" placeholder="https://go.monetag.com/...">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Monetag smart link URL</div>
+        </div>
+        <div class="igroup">
+          <label>🟡 Smartlink / Other</label>
+          <input type="url" id="cfg-smartlinkUrl" class="ifield" placeholder="https://smartlink.example.com/...">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Any other ad network URL</div>
+        </div>
+        <div class="igroup">
+          <label>Ad Reward per View (৳)</label>
+          <input type="number" id="cfg-adReward" class="ifield" placeholder="1" min="0.01" step="0.01">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Paid per completed ad</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+      <!-- REWARDS -->
+      <div class="card">
+        <div class="card-title">💰 Reward Settings</div>
+        <div class="igroup">
+          <label>Daily Bonus (৳)</label>
+          <input type="number" id="cfg-dailyBonus" class="ifield" placeholder="2" min="0" step="0.01">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Free daily login reward</div>
+        </div>
+        <div class="igroup">
+          <label>Referral Bonus (৳)</label>
+          <input type="number" id="cfg-referralBonus" class="ifield" placeholder="5" min="0" step="0.01">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Per successful referral</div>
+        </div>
+        <div class="igroup">
+          <label>Max Daily Ads per User</label>
+          <input type="number" id="cfg-maxDailyAds" class="ifield" placeholder="5" min="1" max="50">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Default: 5 ads/day</div>
+        </div>
+      </div>
+
+      <!-- WITHDRAW -->
+      <div class="card">
+        <div class="card-title">💸 Withdrawal Settings</div>
+        <div class="igroup">
+          <label>Minimum Withdraw (৳)</label>
+          <input type="number" id="cfg-minWithdraw" class="ifield" placeholder="50" min="1">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Users can't withdraw below this</div>
+        </div>
+        <div class="igroup">
+          <label>Ad Cooldown (seconds)</label>
+          <input type="number" id="cfg-adCooldown" class="ifield" placeholder="30" min="5">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">Wait time between ads</div>
+        </div>
+        <div class="igroup">
+          <label>Ad Duration (seconds)</label>
+          <input type="number" id="cfg-adDuration" class="ifield" placeholder="15" min="5" max="60">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px">How long users must watch</div>
+        </div>
+      </div>
+
+      <!-- SITE -->
+      <div class="card">
+        <div class="card-title">🌐 Site Settings</div>
+        <div class="igroup"><label>Site Name</label><input type="text" id="cfg-siteName" class="ifield" placeholder="EarnPro"></div>
+        <div class="igroup"><label>Site Tagline</label><input type="text" id="cfg-tagline" class="ifield" placeholder="Earn · Grow · Withdraw"></div>
+        <div class="igroup"><label>Support Email</label><input type="email" id="cfg-supportEmail" class="ifield" placeholder="support@earnpro.com"></div>
+        <div class="igroup"><label>Telegram Channel</label><input type="url" id="cfg-telegramUrl" class="ifield" placeholder="https://t.me/..."></div>
+      </div>
+
+      <!-- MEMBERSHIP MULTIPLIERS -->
+      <div class="card">
+        <div class="card-title">💎 Membership Multipliers</div>
+        <div class="igroup">
+          <label>🥉 Bronze Multiplier</label>
+          <input type="number" id="cfg-bronzeMultiplier" class="ifield" placeholder="1.2" min="1" step="0.1">
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">1.2 = 20% bonus rewards</div>
+        </div>
+        <div class="igroup"><label>🥈 Silver</label><input type="number" id="cfg-silverMultiplier" class="ifield" placeholder="1.5" min="1" step="0.1"></div>
+        <div class="igroup"><label>🥇 Gold</label><input type="number" id="cfg-goldMultiplier" class="ifield" placeholder="2.0" min="1" step="0.1"></div>
+        <div class="igroup"><label>💎 Diamond</label><input type="number" id="cfg-diamondMultiplier" class="ifield" placeholder="3.0" min="1" step="0.1"></div>
+      </div>
+    </div>
+
+    <!-- SAVE BUTTONS -->
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-p" id="saveBtn" style="padding:13px 36px;font-size:15px">💾 Save All Settings</button>
+      <button class="btn btn-ghost" id="resetBtn" style="padding:13px 24px">↺ Reset Defaults</button>
+      <span style="font-size:12px;color:var(--t3)">Changes apply instantly for all users</span>
+    </div>
+
+    <!-- SECURITY INFO -->
+    <div class="card" style="margin-top:20px;border-color:rgba(59,130,246,.25)">
+      <div class="card-title" style="color:var(--blue)">🔐 Security Notes</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        <p>• Apply <code style="background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--pu)">firestore.rules</code> in Firebase Console → Firestore → Rules tab</p>
+        <p>• Make yourself admin: Firestore → users → your document → add field <code style="background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--pu)">role = "admin"</code></p>
+        <p>• Admin panel has zero links from user panel — completely hidden from public</p>
+        <p>• Daily ad limit (default 5/day) is enforced client-side per device</p>
+        <p>• All reward claims are verified server-side via Firestore</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import { collection, getDocs, addDoc, updateDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAdmin, toast, initMobileSidebar } from './assets/js/admin.js';
+
+const DEFAULTS = {
+  dailyBonus: 2, adReward: 1, referralBonus: 5,
+  minWithdraw: 50, adCooldown: 30, adDuration: 15, maxDailyAds: 5,
+  siteName: 'EarnPro', tagline: 'Earn · Grow · Withdraw',
+  supportEmail: '', telegramUrl: '',
+  bronzeMultiplier: 1.2, silverMultiplier: 1.5, goldMultiplier: 2.0, diamondMultiplier: 3.0,
+  adsterraUrl: '', monetagUrl: '', smartlinkUrl: ''
+};
+
+const keys = Object.keys(DEFAULTS);
+let settingsDocId = null;
+
+requireAdmin(async (user, udata) => {
+  document.getElementById('adminAv').textContent = (udata.username||'A')[0].toUpperCase();
+  document.getElementById('adminName').textContent = udata.username||'Admin';
+  initMobileSidebar();
+  loadSettings();
+});
+
+async function loadSettings() {
+  const snap = await getDocs(collection(db,'settings'));
+  let cfg = {...DEFAULTS};
+  if (!snap.empty) { settingsDocId = snap.docs[0].id; cfg = {...DEFAULTS,...snap.docs[0].data()}; }
+  keys.forEach(k => { const el = document.getElementById('cfg-'+k); if (el) el.value = cfg[k]??''; });
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const data = {};
+  keys.forEach(k => {
+    const el = document.getElementById('cfg-'+k); if (!el) return;
+    const v = el.value.trim();
+    data[k] = (typeof DEFAULTS[k] === 'number') ? (parseFloat(v)||DEFAULTS[k]) : v;
+  });
+  if (settingsDocId) { await updateDoc(doc(db,'settings',settingsDocId), data); }
+  else { const ref = await addDoc(collection(db,'settings'), data); settingsDocId = ref.id; }
+  const st = document.getElementById('saveStatus');
+  st.textContent = '✅ Saved at ' + new Date().toLocaleTimeString();
+  setTimeout(() => st.textContent='', 4000);
+  toast('Settings saved ✅','ok');
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('Reset all to defaults?')) return;
+  keys.forEach(k => { const el = document.getElementById('cfg-'+k); if (el) el.value = DEFAULTS[k]??''; });
+  toast('Defaults restored — click Save to apply','warn');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); location.replace('login.html'); });
+</script>
+</body>
+</html>

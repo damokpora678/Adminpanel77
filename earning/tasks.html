@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Tasks</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><div class="sl-ico">🛡️</div><div><div class="sl-name">EarnPro</div><div class="sl-sub">Admin Panel</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="snav-section">Main</div>
+    <a href="dashboard.html" class="snav-item"><span class="si-ico">📊</span>Dashboard</a>
+    <a href="users.html" class="snav-item"><span class="si-ico">👥</span>Users</a>
+    <div class="snav-section">Content</div>
+    <a href="tasks.html" class="snav-item active"><span class="si-ico">✅</span>Tasks</a>
+    <a href="notices.html" class="snav-item"><span class="si-ico">📢</span>Notices</a>
+    <div class="snav-section">Finance</div>
+    <a href="withdraw.html" class="snav-item"><span class="si-ico">💸</span>Withdrawals</a>
+    <div class="snav-section">Config</div>
+    <a href="settings.html" class="snav-item"><span class="si-ico">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="admin-info"><div class="admin-av" id="adminAv">A</div><div><div class="admin-uname" id="adminName">Admin</div><div class="admin-role">🛡️ Administrator</div></div></div>
+    <button class="btn btn-ghost btn-full btn-sm" id="logoutBtn">🚪 Logout</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu-btn" id="menuBtn">☰</button><h1>✅ Tasks</h1></div>
+    <button class="btn btn-p btn-sm" onclick="document.getElementById('addModal').classList.add('open')">➕ Add Task</button>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="card-title" style="margin:0">📋 All Tasks (<span id="taskCount">0</span>)</div>
+          <input type="text" id="taskSearch" class="ifield" placeholder="🔍 Search..." style="width:160px;padding:8px 12px;font-size:12px">
+        </div>
+        <div id="taskList"></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">📊 Task Stats</div>
+          <div id="taskStats" style="font-size:13px;color:var(--t2)">Loading...</div>
+        </div>
+        <div class="card" style="background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.2)">
+          <div class="card-title" style="color:var(--green)">💡 How Tasks Work</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.8">
+            <p>1️⃣ User clicks <strong>Start</strong> on a task</p>
+            <p>2️⃣ Task link opens (if provided)</p>
+            <p>3️⃣ User clicks <strong>Watch Ad & Claim</strong></p>
+            <p>4️⃣ 15-second ad plays fullscreen</p>
+            <p>5️⃣ Reward added to balance ✅</p>
+            <br>
+            <p style="color:var(--gold)">⚡ Task link = optional external URL (Telegram, YouTube, etc.)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-ov" id="addModal">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-title">➕ Add New Task</div>
+    <div class="form-grid">
+      <div class="igroup"><label>Task Name *</label><input type="text" id="tName" class="ifield" placeholder="e.g. Follow on Telegram"></div>
+      <div class="igroup"><label>Reward (৳) *</label><input type="number" id="tReward" class="ifield" placeholder="5" min="0.01" step="0.01"></div>
+      <div class="igroup"><label>Icon (emoji)</label><input type="text" id="tIcon" class="ifield" placeholder="✈️" maxlength="4"></div>
+      <div class="igroup"><label>Type</label>
+        <select id="tType" class="ifield">
+          <option value="social">📱 Social</option>
+          <option value="telegram">✈️ Telegram</option>
+          <option value="video">📺 Video</option>
+          <option value="link">🔗 Link Visit</option>
+          <option value="survey">📝 Survey</option>
+          <option value="other">⭐ Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="igroup">
+      <label>Task Link (shown to user before ad)</label>
+      <input type="url" id="tLink" class="ifield" placeholder="https://t.me/yourchannel or https://youtube.com/...">
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">✅ This link appears as a button in the task popup so users can visit before claiming reward</div>
+    </div>
+    <div class="igroup"><label>Description</label><input type="text" id="tDesc" class="ifield" placeholder="Short task description"></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" onclick="document.getElementById('addModal').classList.remove('open')" style="flex:1">Cancel</button>
+      <button class="btn btn-p" id="addTaskBtn" style="flex:1">➕ Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TASK MODAL -->
+<div class="modal-ov" id="editTaskModal">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-title">✏️ Edit Task</div>
+    <input type="hidden" id="etId">
+    <div class="form-grid">
+      <div class="igroup"><label>Task Name *</label><input type="text" id="etName" class="ifield"></div>
+      <div class="igroup"><label>Reward (৳) *</label><input type="number" id="etReward" class="ifield" step="0.01"></div>
+      <div class="igroup"><label>Icon</label><input type="text" id="etIcon" class="ifield" maxlength="4"></div>
+      <div class="igroup"><label>Type</label>
+        <select id="etType" class="ifield">
+          <option value="social">📱 Social</option>
+          <option value="telegram">✈️ Telegram</option>
+          <option value="video">📺 Video</option>
+          <option value="link">🔗 Link Visit</option>
+          <option value="survey">📝 Survey</option>
+          <option value="other">⭐ Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="igroup">
+      <label>Task Link</label>
+      <input type="url" id="etLink" class="ifield" placeholder="https://...">
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">This link appears as a button in the user's task popup</div>
+    </div>
+    <div class="igroup"><label>Description</label><input type="text" id="etDesc" class="ifield"></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" onclick="document.getElementById('editTaskModal').classList.remove('open')" style="flex:1">Cancel</button>
+      <button class="btn btn-p" id="saveTaskBtn" style="flex:1">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAdmin, toast, initMobileSidebar } from './assets/js/admin.js';
+
+let allTasks = [];
+
+requireAdmin(async (user, udata) => {
+  document.getElementById('adminAv').textContent = (udata.username||'A')[0].toUpperCase();
+  document.getElementById('adminName').textContent = udata.username||'Admin';
+  initMobileSidebar();
+  loadTasks();
+});
+
+async function loadTasks() {
+  const snap = await getDocs(collection(db,'tasks'));
+  allTasks = [];
+  snap.forEach(d => allTasks.push({id:d.id,...d.data()}));
+  renderTasks(allTasks);
+  renderStats();
+}
+
+function renderTasks(list) {
+  document.getElementById('taskCount').textContent = list.length;
+  const el = document.getElementById('taskList');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="ei">📋</div>No tasks yet. Add one!</div>'; return; }
+  el.innerHTML = '';
+  list.forEach(t => {
+    el.innerHTML += `<div class="task-row" style="margin-bottom:10px;flex-direction:column;align-items:flex-start;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;width:100%">
+        <div class="task-ico">${t.icon||'✅'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${t.name}</div>
+          <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px">+৳${t.reward} · <span style="color:var(--t3)">${t.type||'other'}</span></div>
+          ${t.link?`<div style="font-size:10px;color:var(--blue);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">🔗 ${t.link}</div>`:'<div style="font-size:10px;color:var(--t3);margin-top:2px">No task link</div>'}
+          ${t.description?`<div style="font-size:11px;color:var(--t3);margin-top:1px">${t.description}</div>`:''}
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">✏️</button>
+          <button class="btn btn-red btn-sm" onclick="delTask('${t.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+function renderStats() {
+  const total = allTasks.reduce((s,t) => s+parseFloat(t.reward||0), 0);
+  const byType = {};
+  allTasks.forEach(t => { byType[t.type||'other'] = (byType[t.type||'other']||0)+1; });
+  let html = `<div style="margin-bottom:14px">
+    <div style="font-size:24px;font-weight:800;color:var(--green)">৳${total.toFixed(2)}</div>
+    <div style="font-size:11px;color:var(--t3)">Total reward pool</div>
+  </div><div class="divider"></div>`;
+  const withLink = allTasks.filter(t => t.link).length;
+  const noLink = allTasks.length - withLink;
+  html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--br)"><span style="color:var(--t2)">With task link</span><span class="chip" style="font-size:11px">${withLink}</span></div>`;
+  html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--br)"><span style="color:var(--t2)">No link</span><span class="chip" style="font-size:11px">${noLink}</span></div>`;
+  Object.entries(byType).forEach(([type,count]) => {
+    html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--br)"><span style="color:var(--t2)">${type}</span><span class="chip" style="font-size:11px">${count}</span></div>`;
+  });
+  document.getElementById('taskStats').innerHTML = html;
+}
+
+document.getElementById('taskSearch').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  renderTasks(q ? allTasks.filter(t => (t.name||'').toLowerCase().includes(q)) : allTasks);
+});
+
+document.getElementById('addTaskBtn').addEventListener('click', async () => {
+  const name = document.getElementById('tName').value.trim();
+  const reward = parseFloat(document.getElementById('tReward').value);
+  if (!name || !reward || reward <= 0) { toast('Name and reward required','err'); return; }
+  const data = {
+    name, reward,
+    icon: document.getElementById('tIcon').value.trim()||'✅',
+    type: document.getElementById('tType').value,
+    link: document.getElementById('tLink').value.trim(),
+    description: document.getElementById('tDesc').value.trim(),
+    createdAt: serverTimestamp()
+  };
+  await addDoc(collection(db,'tasks'), data);
+  ['tName','tReward','tIcon','tLink','tDesc'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('addModal').classList.remove('open');
+  toast('Task added ✅','ok');
+  loadTasks();
+});
+
+window.editTask = id => {
+  const t = allTasks.find(x => x.id===id); if (!t) return;
+  document.getElementById('etId').value = id;
+  document.getElementById('etName').value = t.name||'';
+  document.getElementById('etReward').value = t.reward||'';
+  document.getElementById('etIcon').value = t.icon||'';
+  document.getElementById('etType').value = t.type||'other';
+  document.getElementById('etLink').value = t.link||'';
+  document.getElementById('etDesc').value = t.description||'';
+  document.getElementById('editTaskModal').classList.add('open');
+};
+
+document.getElementById('saveTaskBtn').addEventListener('click', async () => {
+  const id = document.getElementById('etId').value;
+  const data = {
+    name: document.getElementById('etName').value.trim(),
+    reward: parseFloat(document.getElementById('etReward').value)||0,
+    icon: document.getElementById('etIcon').value.trim()||'✅',
+    type: document.getElementById('etType').value,
+    link: document.getElementById('etLink').value.trim(),
+    description: document.getElementById('etDesc').value.trim()
+  };
+  await updateDoc(doc(db,'tasks',id), data);
+  const idx = allTasks.findIndex(x => x.id===id);
+  if (idx !== -1) allTasks[idx] = {...allTasks[idx],...data};
+  document.getElementById('editTaskModal').classList.remove('open');
+  toast('Task updated ✅','ok');
+  renderTasks(allTasks);
+  renderStats();
+});
+
+window.delTask = async id => {
+  if (!confirm('Delete this task? Users who already claimed keep their reward.')) return;
+  await deleteDoc(doc(db,'tasks',id));
+  allTasks = allTasks.filter(x => x.id!==id);
+  toast('Task deleted','warn');
+  renderTasks(allTasks);
+  renderStats();
+};
+
+document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); location.replace('login.html'); });
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Dashboard</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.quick-action{background:var(--card);border:1px solid var(--br);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;color:inherit;transition:all .2s}
+.quick-action:hover{border-color:var(--brh);background:rgba(124,58,237,.08)}
+.quick-action .qa-ico{font-size:22px;width:40px;height:40px;border-radius:11px;background:rgba(124,58,237,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.recent-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><div class="sl-ico">🛡️</div><div><div class="sl-name">EarnPro</div><div class="sl-sub">Admin Panel</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="snav-section">Main</div>
+    <a href="dashboard.html" class="snav-item active"><span class="si-ico">📊</span>Dashboard</a>
+    <a href="users.html" class="snav-item"><span class="si-ico">👥</span>Users</a>
+    <div class="snav-section">Content</div>
+    <a href="tasks.html" class="snav-item"><span class="si-ico">✅</span>Tasks</a>
+    <a href="notices.html" class="snav-item"><span class="si-ico">📢</span>Notices</a>
+    <div class="snav-section">Finance</div>
+    <a href="withdraw.html" class="snav-item"><span class="si-ico">💸</span>Withdrawals</a>
+    <div class="snav-section">Config</div>
+    <a href="settings.html" class="snav-item"><span class="si-ico">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="admin-info"><div class="admin-av" id="adminAv">A</div><div><div class="admin-uname" id="adminName">Admin</div><div class="admin-role">🛡️ Administrator</div></div></div>
+    <button class="btn btn-ghost btn-full btn-sm" id="logoutBtn">🚪 Logout</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="mobile-menu-btn" id="menuBtn">☰</button>
+      <h1>📊 Dashboard</h1>
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:11px;color:var(--t3)" id="updatedAt"></span>
+      <button class="btn btn-ghost btn-sm" id="refreshBtn">↻ Refresh</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-ico">👥</div><div class="stat-val" id="st-users">–</div><div class="stat-lbl">Total Users</div></div>
+      <div class="stat-box"><div class="stat-ico">💰</div><div class="stat-val" id="st-earned">–</div><div class="stat-lbl">Total Distributed</div></div>
+      <div class="stat-box"><div class="stat-ico">⏳</div><div class="stat-val" id="st-pending">–</div><div class="stat-lbl">Pending Withdraws</div></div>
+      <div class="stat-box"><div class="stat-ico">✅</div><div class="stat-val" id="st-tasks">–</div><div class="stat-lbl">Active Tasks</div></div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div style="margin-bottom:16px">
+      <div class="card-title">⚡ Quick Actions</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+        <a href="tasks.html" class="quick-action"><div class="qa-ico">➕</div><div><div style="font-size:13px;font-weight:700">Add Task</div><div style="font-size:11px;color:var(--t3)">Create new earning task</div></div></a>
+        <a href="notices.html" class="quick-action"><div class="qa-ico">📢</div><div><div style="font-size:13px;font-weight:700">Push Notice</div><div style="font-size:11px;color:var(--t3)">Announce to all users</div></div></a>
+        <a href="withdraw.html" class="quick-action"><div class="qa-ico">💸</div><div><div style="font-size:13px;font-weight:700">Approve Withdraws</div><div style="font-size:11px;color:var(--t3);"><span id="qa-pending">0</span> pending</div></div></a>
+        <a href="settings.html" class="quick-action"><div class="qa-ico">📺</div><div><div style="font-size:13px;font-weight:700">Set Ad URLs</div><div style="font-size:11px;color:var(--t3)">Adsterra, Monetag, etc.</div></div></a>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <!-- RECENT USERS -->
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between">
+          <span>👥 Recent Users</span>
+          <a href="users.html" style="font-size:11px;color:var(--pl);text-decoration:none;font-weight:600">View all →</a>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>User</th><th>Balance</th><th>Joined</th></tr></thead>
+          <tbody id="recentUsers"></tbody>
+        </table></div>
+      </div>
+      <!-- PENDING WITHDRAWS -->
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between">
+          <span>⏳ Pending Withdrawals</span>
+          <a href="withdraw.html" style="font-size:11px;color:var(--pl);text-decoration:none;font-weight:600">View all →</a>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>User</th><th>Amt</th><th>Via</th><th>Act</th></tr></thead>
+          <tbody id="recentWd"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- TOP EARNERS -->
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between">
+        <span>🏆 Top 10 Earners</span>
+        <a href="users.html" style="font-size:11px;color:var(--pl);text-decoration:none;font-weight:600">Manage →</a>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>#</th><th>Username</th><th>Total Earned</th><th>Balance</th><th>Ads</th><th>Refs</th><th>Plan</th></tr></thead>
+        <tbody id="topEarners"></tbody>
+      </table></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import { collection, getDocs, query, where, updateDoc, doc, increment, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAdmin, toast, ago, initMobileSidebar } from './assets/js/admin.js';
+
+requireAdmin(async (user, udata) => {
+  document.getElementById('adminAv').textContent = (udata.username||'A')[0].toUpperCase();
+  document.getElementById('adminName').textContent = udata.username||'Admin';
+  initMobileSidebar();
+  load();
+});
+
+async function load() {
+  document.getElementById('updatedAt').textContent = 'Updated: '+new Date().toLocaleTimeString();
+  const [uS, wS, tS] = await Promise.all([
+    getDocs(collection(db,'users')),
+    getDocs(query(collection(db,'withdraws'),where('status','==','pending'))),
+    getDocs(collection(db,'tasks'))
+  ]);
+  let totalE = 0;
+  const users = [];
+  uS.forEach(d => { const u=d.data(); users.push({id:d.id,...u}); totalE+=parseFloat(u.totalEarned||0); });
+
+  document.getElementById('st-users').textContent = uS.size;
+  document.getElementById('st-earned').textContent = '৳'+totalE.toFixed(0);
+  document.getElementById('st-pending').textContent = wS.size;
+  document.getElementById('st-tasks').textContent = tS.size;
+  document.getElementById('qa-pending').textContent = wS.size;
+
+  // Recent users
+  const rU = document.getElementById('recentUsers');
+  rU.innerHTML = '';
+  [...users].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,8).forEach(u => {
+    rU.innerHTML += `<tr>
+      <td><b>${u.username||'–'}</b><br><span style="font-size:10px;color:var(--t3)">${u.email||''}</span></td>
+      <td style="color:var(--green);font-weight:600">৳${parseFloat(u.balance||0).toFixed(2)}</td>
+      <td style="color:var(--t3);font-size:11px">${ago(u.createdAt)}</td>
+    </tr>`;
+  });
+
+  // Pending withdraws
+  const rW = document.getElementById('recentWd');
+  rW.innerHTML = '';
+  const wds = [];
+  wS.forEach(d => wds.push({id:d.id,...d.data()}));
+  if (!wds.length) { rW.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:14px">No pending</td></tr>'; }
+  const mIco = {bkash:'📱',nagad:'💚',rocket:'🚀'};
+  wds.slice(0,8).forEach(w => {
+    rW.innerHTML += `<tr>
+      <td>${w.username||w.uid?.slice(0,8)||'–'}</td>
+      <td style="color:var(--gold);font-weight:700">৳${parseFloat(w.amount||0).toFixed(2)}</td>
+      <td>${mIco[w.method]||'💸'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-green btn-sm" onclick="approveWd('${w.id}')">✓</button>
+        <button class="btn btn-red btn-sm" onclick="rejectWd('${w.id}','${w.uid||''}',${w.amount||0})">✗</button>
+      </td>
+    </tr>`;
+  });
+
+  // Top earners
+  const tE = document.getElementById('topEarners');
+  tE.innerHTML = '';
+  [...users].sort((a,b)=>(b.totalEarned||0)-(a.totalEarned||0)).slice(0,10).forEach((u,i) => {
+    tE.innerHTML += `<tr>
+      <td style="font-size:16px">${['🥇','🥈','🥉'][i]||i+1}</td>
+      <td><b>${u.username||'–'}</b></td>
+      <td style="color:var(--green);font-weight:700">৳${parseFloat(u.totalEarned||0).toFixed(2)}</td>
+      <td style="color:var(--pu)">৳${parseFloat(u.balance||0).toFixed(2)}</td>
+      <td>${u.adsWatched||0}</td>
+      <td>${u.referralCount||0}</td>
+      <td><span class="chip" style="font-size:10px">${u.membership||'free'}</span></td>
+    </tr>`;
+  });
+}
+
+window.approveWd = async id => { await updateDoc(doc(db,'withdraws',id),{status:'approved'}); toast('Approved ✅','ok'); load(); };
+window.rejectWd = async (id,uid,amt) => {
+  await updateDoc(doc(db,'withdraws',id),{status:'rejected'});
+  if (uid) await updateDoc(doc(db,'users',uid),{balance:increment(parseFloat(amt||0))});
+  toast('Rejected — ৳'+parseFloat(amt||0).toFixed(2)+' refunded','warn'); load();
+};
+
+document.getElementById('refreshBtn').addEventListener('click', load);
+document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); location.replace('login.html'); });
+</script>
+</body>
+</html>

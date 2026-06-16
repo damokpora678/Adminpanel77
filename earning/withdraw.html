@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Withdrawals</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><div class="sl-ico">🛡️</div><div><div class="sl-name">EarnPro</div><div class="sl-sub">Admin Panel</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="snav-section">Main</div>
+    <a href="dashboard.html" class="snav-item"><span class="si-ico">📊</span>Dashboard</a>
+    <a href="users.html" class="snav-item"><span class="si-ico">👥</span>Users</a>
+    <div class="snav-section">Content</div>
+    <a href="tasks.html" class="snav-item"><span class="si-ico">✅</span>Tasks</a>
+    <a href="notices.html" class="snav-item"><span class="si-ico">📢</span>Notices</a>
+    <div class="snav-section">Finance</div>
+    <a href="withdraw.html" class="snav-item active"><span class="si-ico">💸</span>Withdrawals</a>
+    <div class="snav-section">Config</div>
+    <a href="settings.html" class="snav-item"><span class="si-ico">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="admin-info"><div class="admin-av" id="adminAv">A</div><div><div class="admin-uname" id="adminName">Admin</div><div class="admin-role">🛡️ Administrator</div></div></div>
+    <button class="btn btn-ghost btn-full btn-sm" id="logoutBtn">🚪 Logout</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu-btn" id="menuBtn">☰</button><h1>💸 Withdrawals</h1></div>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--t3)" id="wdSummary"></span>
+    </div>
+  </div>
+  <div class="content">
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+      <div class="stat-box"><div class="stat-ico">⏳</div><div class="stat-val" id="cntPending">–</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat-box"><div class="stat-ico">✅</div><div class="stat-val" id="cntApproved">–</div><div class="stat-lbl">Approved</div></div>
+      <div class="stat-box"><div class="stat-ico">❌</div><div class="stat-val" id="cntRejected">–</div><div class="stat-lbl">Rejected</div></div>
+    </div>
+    <div class="ftabs">
+      <div class="ftab active" id="ft-pending" onclick="filterWd('pending')">⏳ Pending</div>
+      <div class="ftab" id="ft-approved" onclick="filterWd('approved')">✅ Approved</div>
+      <div class="ftab" id="ft-rejected" onclick="filterWd('rejected')">❌ Rejected</div>
+      <div class="ftab" id="ft-all" onclick="filterWd('all')">📋 All</div>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>User</th><th>Account</th><th>Method</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="wdTable"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import { collection, getDocs, updateDoc, doc, increment, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAdmin, toast, ago, initMobileSidebar } from './assets/js/admin.js';
+
+let allWds = [], currentFilter = 'pending';
+
+requireAdmin(async (user, udata) => {
+  document.getElementById('adminAv').textContent = (udata.username||'A')[0].toUpperCase();
+  document.getElementById('adminName').textContent = udata.username||'Admin';
+  initMobileSidebar();
+  loadWds();
+});
+
+async function loadWds() {
+  const snap = await getDocs(query(collection(db,'withdraws'), orderBy('createdAt','desc')));
+  allWds = [];
+  snap.forEach(d => allWds.push({id:d.id,...d.data()}));
+
+  const pending = allWds.filter(w => w.status==='pending');
+  const approved = allWds.filter(w => w.status==='approved');
+  const rejected = allWds.filter(w => w.status==='rejected');
+
+  document.getElementById('cntPending').textContent = pending.length;
+  document.getElementById('cntApproved').textContent = approved.length;
+  document.getElementById('cntRejected').textContent = rejected.length;
+
+  const totalApproved = approved.reduce((s,w) => s+parseFloat(w.amount||0), 0);
+  document.getElementById('wdSummary').textContent = `Total paid: ৳${totalApproved.toFixed(2)}`;
+
+  renderWds(currentFilter);
+}
+
+function renderWds(filter) {
+  const list = filter === 'all' ? allWds : allWds.filter(w => w.status === filter);
+  const tb = document.getElementById('wdTable');
+  if (!list.length) { tb.innerHTML = `<tr><td colspan="7" class="empty">No ${filter} withdrawals</td></tr>`; return; }
+  const mIcons = { bkash:'📱', nagad:'💚', rocket:'🚀' };
+  const smap = { pending:'s-p', approved:'s-a', rejected:'s-r' };
+  tb.innerHTML = '';
+  list.forEach(w => {
+    tb.innerHTML += `<tr>
+      <td><b>${w.username||'–'}</b><br><span style="font-size:9px;color:var(--t3);font-family:monospace">${w.uid?.slice(0,12)||'–'}</span></td>
+      <td style="font-family:monospace;font-size:12px">${w.account||'–'}</td>
+      <td>${mIcons[w.method]||'💸'} ${w.method||'–'}</td>
+      <td style="font-weight:800;color:${w.status==='approved'?'var(--green)':w.status==='rejected'?'var(--red)':'var(--gold)'}">৳${parseFloat(w.amount||0).toFixed(2)}</td>
+      <td><span class="schip ${smap[w.status]||'s-p'}">${(w.status||'pending').toUpperCase()}</span></td>
+      <td style="font-size:11px;color:var(--t3)">${ago(w.createdAt)}</td>
+      <td>${w.status==='pending'?`<div style="display:flex;gap:5px">
+        <button class="btn btn-green btn-sm" onclick="approveWd('${w.id}')">✅ Approve</button>
+        <button class="btn btn-red btn-sm" onclick="rejectWd('${w.id}','${w.uid}',${w.amount||0})">❌ Reject</button>
+      </div>`:`<span style="font-size:11px;color:var(--t3)">–</span>`}</td>
+    </tr>`;
+  });
+}
+
+window.filterWd = filter => {
+  currentFilter = filter;
+  ['pending','approved','rejected','all'].forEach(f => {
+    document.getElementById('ft-'+f)?.classList.toggle('active', f === filter);
+  });
+  renderWds(filter);
+};
+
+window.approveWd = async id => {
+  await updateDoc(doc(db,'withdraws',id), {status:'approved'});
+  const idx = allWds.findIndex(x => x.id === id);
+  if (idx !== -1) allWds[idx].status = 'approved';
+  toast('Withdrawal approved ✅','ok');
+  loadWds();
+};
+
+window.rejectWd = async (id, uid, amt) => {
+  await updateDoc(doc(db,'withdraws',id), {status:'rejected'});
+  if (uid) await updateDoc(doc(db,'users',uid), {balance: increment(parseFloat(amt||0))});
+  const idx = allWds.findIndex(x => x.id === id);
+  if (idx !== -1) allWds[idx].status = 'rejected';
+  toast('Rejected – ৳'+parseFloat(amt||0).toFixed(2)+' refunded to user','warn');
+  loadWds();
+};
+
+document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); location.replace('login.html'); });
+</script>
+</body>
+</html>

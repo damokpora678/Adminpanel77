@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Users</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--pl));display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.membership-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700}
+.mb-free{background:rgba(85,85,128,.2);color:var(--t2)}
+.mb-bronze{background:rgba(205,127,50,.15);color:#cd7f32}
+.mb-silver{background:rgba(192,192,192,.12);color:#c0c0c0}
+.mb-gold{background:rgba(245,158,11,.15);color:var(--gold)}
+.mb-diamond{background:rgba(99,102,241,.15);color:#818cf8}
+</style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><div class="sl-ico">🛡️</div><div><div class="sl-name">EarnPro</div><div class="sl-sub">Admin Panel</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="snav-section">Main</div>
+    <a href="dashboard.html" class="snav-item"><span class="si-ico">📊</span>Dashboard</a>
+    <a href="users.html" class="snav-item active"><span class="si-ico">👥</span>Users</a>
+    <div class="snav-section">Content</div>
+    <a href="tasks.html" class="snav-item"><span class="si-ico">✅</span>Tasks</a>
+    <a href="notices.html" class="snav-item"><span class="si-ico">📢</span>Notices</a>
+    <div class="snav-section">Finance</div>
+    <a href="withdraw.html" class="snav-item"><span class="si-ico">💸</span>Withdrawals</a>
+    <div class="snav-section">Config</div>
+    <a href="settings.html" class="snav-item"><span class="si-ico">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="admin-info"><div class="admin-av" id="adminAv">A</div><div><div class="admin-uname" id="adminName">Admin</div><div class="admin-role">🛡️ Administrator</div></div></div>
+    <button class="btn btn-ghost btn-full btn-sm" id="logoutBtn">🚪 Logout</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu-btn" id="menuBtn">☰</button><h1>👥 Users</h1></div>
+    <span style="font-size:12px;color:var(--t3)" id="totalCount"></span>
+  </div>
+  <div class="content">
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" id="searchInput" class="ifield" placeholder="🔍 Search username or email..." style="flex:1;min-width:200px">
+      <select id="filterStatus" class="ifield" style="width:140px">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="banned">Banned</option>
+      </select>
+      <select id="filterPlan" class="ifield" style="width:140px">
+        <option value="all">All Plans</option>
+        <option value="free">Free</option>
+        <option value="bronze">Bronze</option>
+        <option value="silver">Silver</option>
+        <option value="gold">Gold</option>
+        <option value="diamond">Diamond</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>User</th><th>Balance</th><th>Earned</th><th>Ads</th><th>Refs</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="userTable"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-ov" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Edit User</div>
+    <input type="hidden" id="euId">
+    <div class="form-grid">
+      <div class="igroup"><label>Username</label><input type="text" id="euName" class="ifield"></div>
+      <div class="igroup"><label>Balance (৳)</label><input type="number" id="euBal" class="ifield" step="0.01"></div>
+      <div class="igroup"><label>Total Earned (৳)</label><input type="number" id="euEarned" class="ifield" step="0.01"></div>
+      <div class="igroup"><label>Referral Count</label><input type="number" id="euRef" class="ifield"></div>
+      <div class="igroup"><label>Membership</label>
+        <select id="euMem" class="ifield">
+          <option value="free">Free</option>
+          <option value="bronze">🥉 Bronze Pro</option>
+          <option value="silver">🥈 Silver Pro</option>
+          <option value="gold">🥇 Gold Pro</option>
+          <option value="diamond">💎 Diamond</option>
+        </select>
+      </div>
+      <div class="igroup"><label>Role</label>
+        <select id="euRole" class="ifield">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-ghost" onclick="document.getElementById('editModal').classList.remove('open')" style="flex:1">Cancel</button>
+      <button class="btn btn-p" id="saveUserBtn" style="flex:1">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BALANCE MODAL -->
+<div class="modal-ov" id="addBalModal">
+  <div class="modal-box">
+    <div class="modal-title">💰 Add / Deduct Balance</div>
+    <input type="hidden" id="abId">
+    <div style="font-size:13px;color:var(--t2);margin-bottom:14px">User: <strong id="abName"></strong></div>
+    <div class="igroup"><label>Amount (positive = add, negative = deduct)</label><input type="number" id="abAmt" class="ifield" placeholder="e.g. 50 or -20" step="0.01"></div>
+    <div class="igroup"><label>Reason (optional)</label><input type="text" id="abReason" class="ifield" placeholder="Bonus, correction, etc."></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="document.getElementById('addBalModal').classList.remove('open')" style="flex:1">Cancel</button>
+      <button class="btn btn-p" id="addBalBtn" style="flex:1">✅ Apply</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import { collection, getDocs, updateDoc, deleteDoc, doc, increment } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAdmin, toast, ago, openModal, closeModal, initMobileSidebar } from './assets/js/admin.js';
+
+let allUsers = [];
+
+requireAdmin(async (user, udata) => {
+  document.getElementById('adminAv').textContent = (udata.username||'A')[0].toUpperCase();
+  document.getElementById('adminName').textContent = udata.username||'Admin';
+  initMobileSidebar();
+  loadUsers();
+});
+
+async function loadUsers() {
+  const snap = await getDocs(collection(db,'users'));
+  allUsers = [];
+  snap.forEach(d => allUsers.push({id:d.id,...d.data()}));
+  filterUsers();
+}
+
+function mbClass(m){return {free:'mb-free',bronze:'mb-bronze',silver:'mb-silver',gold:'mb-gold',diamond:'mb-diamond'}[m]||'mb-free';}
+
+function renderTable(users) {
+  document.getElementById('totalCount').textContent = users.length + ' users';
+  const tb = document.getElementById('userTable');
+  if (!users.length) { tb.innerHTML='<tr><td colspan="9" class="empty">No users found</td></tr>'; return; }
+  tb.innerHTML='';
+  users.forEach(u => {
+    const banned = u.isBanned===true;
+    tb.innerHTML+=`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="user-avatar">${(u.username||'U')[0].toUpperCase()}</div>
+        <div><div style="font-weight:700;font-size:13px">${u.username||'–'}</div>
+        <div style="font-size:10px;color:var(--t3)">${u.email||''}</div></div>
+      </div></td>
+      <td style="color:var(--green);font-weight:700">৳${parseFloat(u.balance||0).toFixed(2)}</td>
+      <td style="color:var(--pu)">৳${parseFloat(u.totalEarned||0).toFixed(2)}</td>
+      <td>${u.adsWatched||0}</td>
+      <td>${u.referralCount||0}</td>
+      <td><span class="membership-badge ${mbClass(u.membership)}">${u.membership||'free'}</span></td>
+      <td><span class="schip ${banned?'s-ban':'s-ok'}">${banned?'BANNED':'ACTIVE'}</span></td>
+      <td style="font-size:11px;color:var(--t3)">${ago(u.createdAt)}</td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}')">✏️</button>
+        <button class="btn btn-gold btn-sm" onclick="addBal('${u.id}','${u.username||'User'}')">💰</button>
+        <button class="btn btn-${banned?'green':'red'} btn-sm" onclick="toggleBan('${u.id}',${banned})">${banned?'Unban':'Ban'}</button>
+        <button class="btn btn-ghost btn-sm" title="Reset device lock — user can register again" onclick="resetDevice('${u.id}','${u.deviceFingerprint||''}')">📱↺</button>
+        <button class="btn btn-red btn-sm" onclick="delUser('${u.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', filterUsers);
+document.getElementById('filterStatus').addEventListener('change', filterUsers);
+document.getElementById('filterPlan').addEventListener('change', filterUsers);
+
+function filterUsers() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const st = document.getElementById('filterStatus').value;
+  const pl = document.getElementById('filterPlan').value;
+  renderTable(allUsers.filter(u => {
+    const mQ = !q||(u.username||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q);
+    const mS = st==='all'||(st==='banned'?u.isBanned:!u.isBanned);
+    const mP = pl==='all'||u.membership===pl;
+    return mQ&&mS&&mP;
+  }));
+}
+
+window.editUser = id => {
+  const u = allUsers.find(x=>x.id===id); if(!u) return;
+  document.getElementById('euId').value=id;
+  document.getElementById('euBal').value=parseFloat(u.balance||0).toFixed(2);
+  document.getElementById('euEarned').value=parseFloat(u.totalEarned||0).toFixed(2);
+  document.getElementById('euMem').value=u.membership||'free';
+  document.getElementById('euRef').value=u.referralCount||0;
+  document.getElementById('euName').value=u.username||'';
+  document.getElementById('euRole').value=u.role||'user';
+  openModal('editModal');
+};
+
+document.getElementById('saveUserBtn').addEventListener('click', async () => {
+  const id = document.getElementById('euId').value;
+  const data = {
+    balance:parseFloat(document.getElementById('euBal').value)||0,
+    totalEarned:parseFloat(document.getElementById('euEarned').value)||0,
+    membership:document.getElementById('euMem').value,
+    referralCount:parseInt(document.getElementById('euRef').value)||0,
+    username:document.getElementById('euName').value.trim(),
+    role:document.getElementById('euRole').value
+  };
+  await updateDoc(doc(db,'users',id), data);
+  const idx=allUsers.findIndex(x=>x.id===id);
+  if(idx!==-1)allUsers[idx]={...allUsers[idx],...data};
+  closeModal('editModal');
+  toast('User updated ✅','ok');
+  filterUsers();
+});
+
+window.addBal = (id, name) => {
+  document.getElementById('abId').value=id;
+  document.getElementById('abName').textContent=name;
+  document.getElementById('abAmt').value='';
+  document.getElementById('abReason').value='';
+  openModal('addBalModal');
+};
+
+document.getElementById('addBalBtn').addEventListener('click', async () => {
+  const id=document.getElementById('abId').value;
+  const amt=parseFloat(document.getElementById('abAmt').value);
+  if(isNaN(amt)||amt===0){toast('Enter valid amount','err');return;}
+  await updateDoc(doc(db,'users',id),{balance:increment(amt),totalEarned:amt>0?increment(amt):0});
+  const idx=allUsers.findIndex(x=>x.id===id);
+  if(idx!==-1)allUsers[idx].balance=(allUsers[idx].balance||0)+amt;
+  closeModal('addBalModal');
+  toast(`Balance ${amt>0?'added':'deducted'}: ৳${Math.abs(amt)}`, 'ok');
+  filterUsers();
+});
+
+window.toggleBan = async (id, isBanned) => {
+  await updateDoc(doc(db,'users',id),{isBanned:!isBanned});
+  const idx=allUsers.findIndex(x=>x.id===id);
+  if(idx!==-1)allUsers[idx].isBanned=!isBanned;
+  toast(isBanned?'User unbanned':'User banned','ok');
+  filterUsers();
+};
+
+window.resetDevice = async (uid, fingerprint) => {
+  if (!confirm('Reset device lock for this user?\nThis allows a new account to be created from their device.')) return;
+  try {
+    if (fingerprint) {
+      const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await deleteDoc(doc(db, 'devices', fingerprint));
+    }
+    await updateDoc(doc(db,'users',uid),{deviceFingerprint:null});
+    toast('Device lock reset ✅ — user can now register again','ok');
+    const idx=allUsers.findIndex(x=>x.id===uid);
+    if(idx!==-1) allUsers[idx].deviceFingerprint=null;
+  } catch(e) {
+    toast('Reset failed: '+e.message,'err');
+  }
+};
+
+window.delUser = async id => {
+  if(!confirm('Permanently delete this user?')) return;
+  const u = allUsers.find(x=>x.id===id);
+  if (u?.deviceFingerprint) {
+    try {
+      const { deleteDoc: dd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await dd(doc(db, 'devices', u.deviceFingerprint));
+    } catch(e) {}
+  }
+  await deleteDoc(doc(db,'users',id));
+  allUsers=allUsers.filter(x=>x.id!==id);
+  toast('User deleted','warn');
+  filterUsers();
+};
+
+document.getElementById('logoutBtn').addEventListener('click', async()=>{await signOut(auth);location.replace('login.html');});
+</script>
+</body>
+</html>

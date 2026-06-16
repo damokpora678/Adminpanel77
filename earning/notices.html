@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Notices</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="admin-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><div class="sl-ico">🛡️</div><div><div class="sl-name">EarnPro</div><div class="sl-sub">Admin Panel</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="snav-section">Main</div>
+    <a href="dashboard.html" class="snav-item"><span class="si-ico">📊</span>Dashboard</a>
+    <a href="users.html" class="snav-item"><span class="si-ico">👥</span>Users</a>
+    <div class="snav-section">Content</div>
+    <a href="tasks.html" class="snav-item"><span class="si-ico">✅</span>Tasks</a>
+    <a href="notices.html" class="snav-item active"><span class="si-ico">📢</span>Notices</a>
+    <div class="snav-section">Finance</div>
+    <a href="withdraw.html" class="snav-item"><span class="si-ico">💸</span>Withdrawals</a>
+    <div class="snav-section">Config</div>
+    <a href="settings.html" class="snav-item"><span class="si-ico">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="admin-info"><div class="admin-av" id="adminAv">A</div><div><div class="admin-uname" id="adminName">Admin</div><div class="admin-role">🛡️ Administrator</div></div></div>
+    <button class="btn btn-ghost btn-full btn-sm" id="logoutBtn">🚪 Logout</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu-btn" id="menuBtn">☰</button><h1>📢 Notices</h1></div>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">📢 Publish Notice</div>
+          <div class="igroup"><label>Notice Text</label><textarea id="noticeText" class="ifield" placeholder="Type your announcement here..." rows="3" style="resize:vertical"></textarea></div>
+          <div class="igroup"><label>Priority</label>
+            <select id="noticePriority" class="ifield">
+              <option value="normal">📢 Normal</option>
+              <option value="important">🔴 Important</option>
+              <option value="urgent">🚨 Urgent</option>
+            </select>
+          </div>
+          <button class="btn btn-p btn-full" id="publishBtn" style="padding:12px">📢 Publish Notice</button>
+        </div>
+        <div style="background:rgba(124,58,237,.08);border:1px solid var(--br);border-radius:var(--r2);padding:13px;font-size:12px;color:var(--t2)">
+          <strong style="color:var(--pl)">💡 Tips:</strong><br>
+          • Notices scroll on the user home page<br>
+          • Only the latest notice is shown<br>
+          • Keep it short and clear<br>
+          • Delete old ones to keep it fresh
+        </div>
+      </div>
+      <div>
+        <div class="card-title">📋 Active Notices (<span id="noticeCount">0</span>)</div>
+        <div id="noticeList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAdmin, toast, ago, initMobileSidebar } from './assets/js/admin.js';
+
+requireAdmin(async (user, udata) => {
+  document.getElementById('adminAv').textContent = (udata.username||'A')[0].toUpperCase();
+  document.getElementById('adminName').textContent = udata.username||'Admin';
+  initMobileSidebar();
+  loadNotices();
+});
+
+async function loadNotices() {
+  const snap = await getDocs(query(collection(db,'notices'), orderBy('createdAt','desc')));
+  document.getElementById('noticeCount').textContent = snap.size;
+  const el = document.getElementById('noticeList');
+  if (snap.empty) { el.innerHTML = '<div class="empty"><div class="ei">📢</div>No notices yet</div>'; return; }
+  el.innerHTML = '';
+  const pIcons = { normal:'📢', important:'🔴', urgent:'🚨' };
+  snap.forEach(d => {
+    const n = d.data();
+    el.innerHTML += `<div class="notice-card">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span>${pIcons[n.priority||'normal']}</span>
+          <span class="chip" style="font-size:10px">${n.priority||'normal'}</span>
+        </div>
+        <div class="notice-txt">${n.text}</div>
+        <div class="notice-date">${ago(n.createdAt)}</div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="delNotice('${d.id}')">🗑</button>
+    </div>`;
+  });
+}
+
+document.getElementById('publishBtn').addEventListener('click', async () => {
+  const text = document.getElementById('noticeText').value.trim();
+  const priority = document.getElementById('noticePriority').value;
+  if (!text) { toast('Enter notice text','err'); return; }
+  await addDoc(collection(db,'notices'), { text, priority, createdAt: serverTimestamp() });
+  document.getElementById('noticeText').value = '';
+  toast('Notice published! 📢','ok');
+  loadNotices();
+});
+
+window.delNotice = async id => {
+  await deleteDoc(doc(db,'notices',id));
+  toast('Notice deleted','warn');
+  loadNotices();
+};
+
+document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); location.replace('login.html'); });
+</script>
+</body>
+</html>

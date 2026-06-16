@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07071a">
+<title>EarnPro Admin</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-wrap{width:100%;max-width:400px}
+.login-logo{text-align:center;margin-bottom:28px}
+.lic{width:70px;height:70px;border-radius:22px;background:linear-gradient(135deg,var(--p),var(--pl));display:inline-flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 32px var(--pglow);margin-bottom:14px}
+.login-logo h1{font-size:24px;font-weight:900;background:linear-gradient(135deg,var(--pu),var(--pl));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-logo p{font-size:12px;color:var(--t3);margin-top:4px}
+.login-card{background:var(--card);border:1px solid var(--br);border-radius:var(--r4);padding:28px 24px}
+.login-card h2{font-size:19px;font-weight:800;margin-bottom:4px}
+.login-card .sub{font-size:12px;color:var(--t3);margin-bottom:20px}
+.sec-note{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--r2);padding:10px 13px;font-size:11px;color:var(--red);margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-logo">
+    <div class="lic">🛡️</div>
+    <h1>Admin Panel</h1>
+    <p>EarnPro Management System</p>
+  </div>
+  <div class="login-card">
+    <h2>Secure Login 🔐</h2>
+    <p class="sub">Authorized personnel only</p>
+    <div class="sec-note">🔒 This panel is private. Unauthorized access is blocked.</div>
+    <div class="igroup">
+      <label>Admin Email</label>
+      <input type="email" id="em" class="ifield" placeholder="admin@gmail.com" autocomplete="email">
+    </div>
+    <div class="igroup">
+      <label>Password</label>
+      <input type="password" id="pw" class="ifield" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn btn-p btn-full" id="loginBtn" style="padding:13px;font-size:14px;margin-top:4px">🛡️ Login as Admin</button>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from './assets/firebase/firebase.js';
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { toast, showLoader, hideLoader } from './assets/js/admin.js';
+
+/* Single-fire: already logged in as admin → dashboard */
+const unsub = onAuthStateChanged(auth, async user => {
+  unsub();
+  if(!user) return;
+  try {
+    /* Check admins collection */
+    const aSnap = await getDoc(doc(db,'admins',user.uid));
+    if(aSnap.exists()){ location.replace('dashboard.html'); return; }
+    /* Fallback: check users role */
+    const uSnap = await getDoc(doc(db,'users',user.uid));
+    if(uSnap.data()?.role === 'admin') location.replace('dashboard.html');
+  } catch {}
+});
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const em = document.getElementById('em').value.trim().toLowerCase();
+  const pw = document.getElementById('pw').value;
+  if(!em || !pw){ toast('Fill all fields','err'); return; }
+
+  showLoader();
+
+  let uid;
+  try {
+    /* Step 1: Firebase Authentication */
+    const cred = await signInWithEmailAndPassword(auth, em, pw);
+    uid = cred.user.uid;
+  } catch(e){
+    hideLoader();
+    const m = {
+      'auth/invalid-credential': 'Wrong email or password.',
+      'auth/user-not-found':     'No account found.',
+      'auth/wrong-password':     'Wrong password.',
+      'auth/too-many-requests':  'Too many attempts. Wait a moment.',
+      'auth/network-request-failed':'Network error. Check connection.'
+    };
+    toast(m[e.code] || 'Login failed: ' + e.code,'err');
+    return;
+  }
+
+  try {
+    /* Step 2: Check admins/{uid} in Firestore */
+    const aSnap = await getDoc(doc(db,'admins',uid));
+    if(aSnap.exists()){
+      /* ✅ Found in admins collection */
+      hideLoader();
+      location.replace('dashboard.html');
+      return;
+    }
+
+    /* Fallback: check users/{uid} role field */
+    const uSnap = await getDoc(doc(db,'users',uid));
+    const userData = uSnap.data();
+    if(userData && userData.role === 'admin'){
+      hideLoader();
+      location.replace('dashboard.html');
+      return;
+    }
+
+    /* ❌ Not an admin */
+    const { signOut } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await signOut(auth);
+    hideLoader();
+    toast('Access Denied. You are not an admin.','err');
+
+  } catch(e){
+    hideLoader();
+    toast('Verification failed: ' + e.code,'err');
+  }
+});
+</script>
+</body>
+</html>
