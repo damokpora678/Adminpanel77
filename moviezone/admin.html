@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineVerse Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0ea5e9;--primary-dark:#0284c7;--accent:#f59e0b;--accent2:#8b5cf6;--danger:#ef4444;--success:#10b981;--bg:#060b14;--bg2:#0c1420;--bg3:#111827;--card:#0f1d2e;--card2:#162032;--border:rgba(14,165,233,0.15);--border2:rgba(255,255,255,0.07);--text:#f0f6ff;--text2:#94a3b8;--text3:#64748b;--sidebar-w:260px;--radius:12px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:10px;}
+
+
+.ep-row{display:grid;grid-template-columns:80px 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px;}
+.ep-row input{margin-bottom:0;}
+.btn-ep-del{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:.9rem;transition:.2s;white-space:nowrap;}
+.btn-ep-del:hover{background:var(--danger);color:#fff;}
+.btn-ep-add{background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);color:var(--primary);border-radius:10px;padding:10px 20px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;transition:.2s;}
+.btn-ep-add:hover{background:rgba(14,165,233,0.2);}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 30% 40%,rgba(14,165,233,0.12) 0%,transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(139,92,246,0.08) 0%,transparent 50%),var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .4s;}
+.login-screen.hidden{opacity:0;pointer-events:none;}
+.login-box{background:rgba(15,29,46,0.9);border:1px solid var(--border);border-radius:24px;padding:48px 40px;width:100%;max-width:420px;backdrop-filter:blur(20px);box-shadow:0 40px 80px rgba(0,0,0,0.6),0 0 40px rgba(14,165,233,0.1);animation:fadeUp .5s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{font-size:2rem;font-weight:800;text-align:center;margin-bottom:6px;background:linear-gradient(135deg,#0ea5e9,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.login-sub{text-align:center;color:var(--text3);font-size:.85rem;margin-bottom:36px;}
+.form-group{margin-bottom:18px;}
+.form-label{font-size:.8rem;font-weight:600;color:var(--text2);margin-bottom:7px;display:block;letter-spacing:.5px;text-transform:uppercase;}
+.form-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.92rem;outline:none;transition:.2s;}
+.form-input:focus{border-color:var(--primary);background:rgba(14,165,233,0.08);box-shadow:0 0 0 3px rgba(14,165,233,0.12);}
+.btn-login{width:100%;background:linear-gradient(135deg,var(--primary),var(--accent2));color:#fff;border:none;padding:13px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:.25s;margin-top:6px;box-shadow:0 4px 20px rgba(14,165,233,0.35);}
+.btn-login:hover{transform:translateY(-2px);}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.login-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:.83rem;color:#f87171;margin-top:12px;display:none;}
+
+/* ACCESS DENIED */
+.access-denied{position:fixed;inset:0;z-index:9998;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:40px;}
+.access-denied-icon{font-size:4rem;}
+.access-denied-title{font-size:1.8rem;font-weight:800;color:var(--danger);}
+.access-denied-sub{font-size:.9rem;color:var(--text3);max-width:360px;}
+
+/* LAYOUT */
+.dashboard{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:rgba(12,20,32,0.98);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:transform .3s;}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#0ea5e9,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sidebar-logo span{display:block;font-size:.7rem;color:var(--text3);-webkit-text-fill-color:var(--text3);font-weight:400;margin-top:2px;}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;}
+.nav-section-title{font-size:.68rem;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:10px 10px 6px;margin-top:8px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text2);font-size:.88rem;font-weight:500;cursor:pointer;transition:.2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(14,165,233,0.08);color:var(--text);}
+.nav-item.active{background:rgba(14,165,233,0.15);color:var(--primary);border-left:3px solid var(--primary);}
+.nav-item-icon{font-size:1rem;width:22px;text-align:center;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+.admin-user{display:flex;align-items:center;gap:10px;}
+.admin-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.admin-info{flex:1;min-width:0;}
+.admin-name{font-size:.83rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-role{font-size:.72rem;color:var(--text3);}
+.btn-logout{background:none;border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:8px;padding:4px 10px;font-family:'Outfit',sans-serif;font-size:.75rem;cursor:pointer;transition:.2s;white-space:nowrap;}
+.btn-logout:hover{background:var(--danger);color:#fff;}
+.main-content{margin-left:var(--sidebar-w);flex:1;padding:30px;min-height:100vh;}
+.page-header{margin-bottom:28px;}
+.page-title{font-size:1.5rem;font-weight:700;margin-bottom:4px;}
+.page-subtitle{font-size:.85rem;color:var(--text3);}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* CARDS */
+.glass-card{background:rgba(15,29,46,0.8);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(10px);padding:24px;margin-bottom:20px;}
+.card-title{font-size:1rem;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.card-title-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.85rem;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:.2s;}
+.stat-card:hover{border-color:rgba(14,165,233,0.3);}
+.stat-card::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;background:var(--stat-color,var(--primary));opacity:.1;}
+.stat-icon{font-size:1.8rem;margin-bottom:10px;}
+.stat-val{font-size:2rem;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.stat-label{font-size:.8rem;color:var(--text3);margin-top:4px;}
+
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-row.three{grid-template-columns:1fr 1fr 1fr;}
+.form-row.full{grid-template-columns:1fr;}
+textarea.form-input{min-height:90px;resize:vertical;}
+select.form-input{cursor:pointer;}
+
+/* BUTTONS */
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 15px rgba(14,165,233,0.3);}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-outline:hover{color:var(--text);border-color:var(--primary);}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#ef4444);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:.78rem;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;padding:10px 14px;font-size:.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border2);font-size:.88rem;color:var(--text2);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(14,165,233,0.04);}
+.table-thumb{width:42px;height:60px;border-radius:6px;object-fit:cover;display:block;}
+.badge-table{display:inline-block;padding:3px 8px;border-radius:4px;font-size:.7rem;font-weight:700;}
+.badge-vip{background:rgba(245,158,11,0.2);color:#f59e0b;}
+.badge-free{background:rgba(16,185,129,0.2);color:#10b981;}
+.badge-locked{background:rgba(239,68,68,0.18);color:#ef4444;}
+.table-actions{display:flex;gap:6px;}
+.table-wrap{overflow-x:auto;}
+.url-warn{font-size:.72rem;color:#f59e0b;margin-top:5px;display:none;}
+.url-warn.visible{display:block;}
+
+/* TOGGLE */
+.toggle-wrap{display:flex;align-items:center;gap:10px;}
+.toggle{position:relative;display:inline-block;width:46px;height:24px;}
+.toggle input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#2d3748;border-radius:30px;transition:.3s;}
+.slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;left:3px;bottom:3px;transition:.3s;}
+input:checked+.slider{background:var(--primary);}
+input:checked+.slider::before{transform:translateX(22px);}
+.toggle-label{font-size:.88rem;color:var(--text2);}
+
+/* UPLOAD */
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;transition:.2s;cursor:pointer;background:rgba(255,255,255,0.02);}
+.upload-area:hover{border-color:var(--primary);background:rgba(14,165,233,0.05);}
+.upload-icon{font-size:2rem;margin-bottom:8px;}
+.upload-text{font-size:.85rem;color:var(--text3);}
+.upload-preview{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:12px;display:none;}
+.upload-progress{margin-top:12px;display:none;}
+.progress-bar{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent2));width:0%;transition:.3s;}
+.progress-text{font-size:.78rem;color:var(--text3);margin-top:5px;}
+
+/* AD MODE */
+.ad-mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;}
+.ad-mode-opt{border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.02);}
+.ad-mode-opt.selected,.ad-mode-opt:hover{border-color:var(--primary);background:rgba(14,165,233,0.08);}
+.ad-mode-icon{font-size:1.5rem;margin-bottom:6px;}
+.ad-mode-name{font-size:.8rem;font-weight:600;}
+.ad-mode-desc{font-size:.7rem;color:var(--text3);margin-top:3px;}
+
+/* CATEGORIES */
+.cat-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.cat-tag{display:flex;align-items:center;gap:6px;background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.2);border-radius:20px;padding:5px 12px;font-size:.82rem;color:var(--primary);}
+.cat-tag button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.85rem;line-height:1;}
+
+/* COLOR SWATCHES */
+.color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.swatch{width:34px;height:34px;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:.2s;}
+.swatch.active{border-color:#fff;transform:scale(1.15);}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:24px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;min-width:260px;max-width:380px;box-shadow:0 8px 30px rgba(0,0,0,0.4);transform:translateX(120%);transition:.3s cubic-bezier(.34,1.56,.64,1);font-size:.85rem;}
+.toast.show{transform:translateX(0);}
+.toast.success{border-left:3px solid var(--success);}
+.toast.error{border-left:3px solid var(--danger);}
+.toast.info{border-left:3px solid var(--primary);}
+.toast.warn{border-left:3px solid var(--accent);}
+.toast-icon{font-size:1.1rem;}
+
+/* SIDEBAR TOGGLE */
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;width:40px;height:40px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:1.1rem;cursor:pointer;align-items:center;justify-content:center;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);}
+.empty-state-icon{font-size:2.5rem;margin-bottom:10px;}
+
+/* JSON EDITOR */
+.json-editor{font-family:'JetBrains Mono',monospace;font-size:.78rem;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:120px;resize:vertical;line-height:1.6;}
+.json-hint{font-size:.72rem;color:var(--text3);margin-top:6px;line-height:1.5;}
+.json-valid{border-color:rgba(16,185,129,0.5)!important;}
+.json-invalid{border-color:rgba(239,68,68,0.5)!important;}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-content{margin-left:0;}
+  .sidebar-toggle{display:flex;}
+  .form-row{grid-template-columns:1fr;}
+  .form-row.three{grid-template-columns:1fr;}
+  .ad-mode-grid{grid-template-columns:1fr;}
+  .ep-row{grid-template-columns:70px 1fr;grid-template-rows:auto auto;}
+  .ep-row .form-group:nth-child(3){grid-column:1/3;}
+  .ep-row .btn-ep-del{grid-column:1/3;justify-self:start;}
+}
+</style>
+</head>
+<body>
+
+<!-- ACCESS DENIED -->
+<div class="access-denied" id="accessDenied">
+  <div class="access-denied-icon">🚫</div>
+  <div class="access-denied-title">Access Denied</div>
+  <div class="access-denied-sub">You are not authorized to access this admin panel. This incident has been logged.</div>
+  <button class="btn-login" style="max-width:200px;margin-top:8px;" onclick="doLogout()">🔐 Sign Out</button>
+</div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">⚙️ CineVerse</div>
+    <div class="login-sub">Admin Dashboard · Sign in to continue</div>
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:70px;height:70px;border-radius:20px;background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(139,92,246,0.15));border:1px solid var(--border);font-size:2rem;">🔑</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Admin Email</label>
+      <input type="email" class="form-input" id="loginEmail" placeholder="admin@example.com" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div style="position:relative;">
+        <input type="password" class="form-input" id="loginPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;">
+        <button onclick="togglePassVis()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;" id="passVisBtn">👁️</button>
+      </div>
+    </div>
+    <button class="btn-login" onclick="doLogin()" id="loginBtn">🔐 Access Dashboard</button>
+    <div class="login-error" id="loginError"></div>
+    <div style="margin-top:18px;text-align:center;font-size:.75rem;color:var(--text3);">🔒 Firebase Auth · App Check Enabled</div>
+  </div>
+</div>
+
+<!-- SIDEBAR TOGGLE -->
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">CineVerse<span>Admin Control Panel</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Overview</div>
+      <div class="nav-item active" onclick="showPanel('analytics')"><span class="nav-item-icon">📊</span> Analytics</div>
+      <div class="nav-section-title">Content</div>
+      <div class="nav-item" onclick="showPanel('movies')"><span class="nav-item-icon">🎬</span> Movies</div>
+      <div class="nav-item" onclick="showPanel('banners')"><span class="nav-item-icon">🖼️</span> Banners</div>
+      <div class="nav-item" onclick="showPanel('categories')"><span class="nav-item-icon">🗂️</span> Categories</div>
+      <div class="nav-section-title">Monetization</div>
+      <div class="nav-item" onclick="showPanel('ads')"><span class="nav-item-icon">📢</span> Ads Settings</div>
+      <div class="nav-item" onclick="showPanel('vip')"><span class="nav-item-icon">👑</span> VIP System</div>
+      <div class="nav-item" onclick="showPanel('payment')"><span class="nav-item-icon">💳</span> Payment Settings</div>
+      <div class="nav-item" onclick="showPanel('subscriptions')"><span class="nav-item-icon">📊</span> Subscriptions</div>
+      <div class="nav-item" onclick="showPanel('unlock')"><span class="nav-item-icon">🔓</span> Unlock Settings</div>
+      <div class="nav-section-title">Platform</div>
+      <div class="nav-item" onclick="showPanel('social')"><span class="nav-item-icon">🔗</span> Social Links</div>
+      <div class="nav-item" onclick="showPanel('share')"><span class="nav-item-icon">📤</span> Share Settings</div>
+      <div class="nav-item" onclick="showPanel('ui')"><span class="nav-item-icon">🎨</span> UI Control</div>
+      <div class="nav-item" onclick="showPanel('notif')"><span class="nav-item-icon">📣</span> Notifications</div>
+      <div class="nav-item" onclick="showPanel('features')"><span class="nav-item-icon">🔧</span> Feature Control</div>
+      <div class="nav-item" onclick="showPanel('reels')"><span class="nav-item-icon">🎞️</span> Reels / Clips</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-user">
+        <div class="admin-avatar">👤</div>
+        <div class="admin-info">
+          <div class="admin-name" id="adminName">Admin</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ANALYTICS -->
+    <div class="panel active" id="panel-analytics">
+      <div class="page-header">
+        <div class="page-title">📊 Analytics Dashboard</div>
+        <div class="page-subtitle">Real-time platform overview</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card" style="--stat-color:#0ea5e9"><div class="stat-icon">🎬</div><div class="stat-val" id="statMovies">0</div><div class="stat-label">Total Movies</div></div>
+        <div class="stat-card" style="--stat-color:#10b981"><div class="stat-icon">👁️</div><div class="stat-val" id="statViews">0</div><div class="stat-label">Total Views</div></div>
+        <div class="stat-card" style="--stat-color:#f59e0b"><div class="stat-icon">🖱️</div><div class="stat-val" id="statClicks">0</div><div class="stat-label">Ad Clicks</div></div>
+        <div class="stat-card" style="--stat-color:#8b5cf6"><div class="stat-icon">🖼️</div><div class="stat-val" id="statBanners">0</div><div class="stat-label">Banners</div></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📈</div>Quick Actions</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="showPanel('movies')">➕ Add Movie</button>
+          <button class="btn btn-outline" onclick="showPanel('ads')">📢 Update Ads</button>
+          <button class="btn btn-outline" onclick="showPanel('banners')">🖼️ Manage Banners</button>
+          <button class="btn btn-accent" onclick="showPanel('vip')">👑 VIP Settings</button>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎬</div>Recent Movies</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Thumb</th><th>Title</th><th>Category</th><th>Type</th><th>Views</th></tr></thead>
+            <tbody id="recentMoviesTbody"><tr><td colspan="5" style="text-align:center;color:var(--text3);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOVIES -->
+    <div class="panel" id="panel-movies">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div><div class="page-title">🎬 Movie Management</div><div class="page-subtitle">Add, edit, and manage all movies</div></div>
+        <button class="btn btn-primary" onclick="openMovieForm()">➕ Add Movie</button>
+      </div>
+      <div class="glass-card" id="movieForm" style="display:none;">
+        <div class="card-title"><div class="card-title-icon">✏️</div><span id="movieFormTitle">Add New Movie</span></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Movie Title *</label><input type="text" class="form-input" id="mTitle" placeholder="Enter movie title"></div>
+          <div class="form-group"><label class="form-label">Category *</label><select class="form-input" id="mCategory"><option value="">Select category</option></select></div>
+        </div>
+        <div class="form-row full"><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="mDesc" placeholder="Movie description..."></textarea></div></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Video Link (iframe/direct)</label><input type="url" class="form-input" id="mVideoLink" placeholder="https://..."></div>
+          <div class="form-group"><label class="form-label">Thumbnail URL</label><input type="url" class="form-input" id="mThumbUrl" placeholder="https://..."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Upload Thumbnail</label>
+            <div class="upload-area" onclick="document.getElementById('mThumbFile').click()">
+              <div class="upload-icon">📷</div><div class="upload-text">Click to upload thumbnail</div>
+              <input type="file" id="mThumbFile" accept="image/*" style="display:none" onchange="previewThumb(this)">
+              <img class="upload-preview" id="thumbPreview" src="" alt="">
+              <div class="upload-progress" id="thumbProgress"><div class="progress-bar"><div class="progress-fill" id="thumbProgressFill"></div></div><div class="progress-text" id="thumbProgressText">Uploading...</div></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Movie Details</label>
+            <input type="text" class="form-input" id="mYear" placeholder="Year (e.g. 2024)" style="margin-bottom:8px;">
+            <input type="text" class="form-input" id="mDuration" placeholder="Duration (e.g. 2h 15m)" style="margin-bottom:8px;">
+            <input type="text" class="form-input" id="mRating" placeholder="Rating (e.g. 8.5)">
+          </div>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label class="form-label" style="display:block;margin-bottom:10px;">Content Access Mode</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <label id="modeFreeLabel" style="border:2px solid rgba(34,197,94,0.4);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s;background:rgba(34,197,94,0.06);" onclick="setContentMode('free')">
+              <input type="radio" name="contentMode" id="modeFree" value="free" style="display:none;" checked>
+              <div style="font-size:1.3rem;margin-bottom:4px;">🆓</div><div style="font-size:.78rem;font-weight:700;color:#22c55e;">FREE</div><div style="font-size:.65rem;color:var(--text3);">No ads needed</div>
+            </label>
+            <label id="modeAdsLabel" style="border:2px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s;" onclick="setContentMode('ads')">
+              <input type="radio" name="contentMode" id="modeAds" value="ads" style="display:none;">
+              <div style="font-size:1.3rem;margin-bottom:4px;">📢</div><div style="font-size:.78rem;font-weight:700;color:var(--primary);">VIP + ADS</div><div style="font-size:.65rem;color:var(--text3);">Watch ads or VIP skips</div>
+            </label>
+            <label id="modeVipLabel" style="border:2px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s;" onclick="setContentMode('vip')">
+              <input type="radio" name="contentMode" id="modeVip" value="vip" style="display:none;">
+              <div style="font-size:1.3rem;margin-bottom:4px;">👑</div><div style="font-size:.78rem;font-weight:700;color:#f59e0b;">VIP ONLY</div><div style="font-size:.65rem;color:var(--text3);">VIP access only</div>
+            </label>
+          </div>
+          <input type="hidden" id="mContentMode" value="free">
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;">
+          <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="mNew"><span class="slider"></span></label><span class="toggle-label">🆕 Mark as New</span></label>
+          <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="mTrending"><span class="slider"></span></label><span class="toggle-label">🔥 Mark as Trending</span></label>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Preview Video URL (Hover Preview)</label><input type="url" class="form-input" id="mPreviewUrl" placeholder="https://... short clip URL"></div>
+          <div class="form-group"><label class="form-label">Trending Label</label><input type="text" class="form-input" id="mTrendingLabel" placeholder="🔥 Trending"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Watching Count (simulated)</label><input type="text" class="form-input" id="mWatchingCount" placeholder="e.g. 1.2k" style="max-width:200px;"></div>
+        <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:18px;margin-bottom:18px;">
+          <div style="font-size:.85rem;font-weight:700;color:var(--accent2);margin-bottom:14px;display:flex;align-items:center;gap:8px;"><span style="font-size:1.1rem;">🎞️</span> Short Clip (optional — embed a reel inside this movie)</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Short Clip Video URL <span style="color:var(--text3);font-weight:400;">(direct .mp4 only)</span></label>
+              <input type="url" class="form-input" id="mClipVideoUrl" placeholder="https://example.com/clip.mp4" oninput="validateReelVideoUrl(this,'mClipVideoUrlWarn')">
+              <div class="url-warn" id="mClipVideoUrlWarn">⚠️ Use a direct .mp4 link. Google Drive preview links are not supported.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short Clip Thumbnail URL</label>
+              <input type="url" class="form-input" id="mClipThumbUrl" placeholder="https://...">
+            </div>
+          </div>
+          <div class="form-group" style="max-width:260px;">
+            <label class="form-label">Short Clip Access Type</label>
+            <select class="form-input" id="mClipAccessType">
+              <option value="free">🆓 Free</option>
+              <option value="locked">🔒 Locked</option>
+            </select>
+          </div>
+        </div>
+        <div style="background:rgba(14,165,233,0.05);border:1px solid rgba(14,165,233,0.18);border-radius:12px;padding:18px;margin-bottom:18px;">
+          <div style="font-size:.85rem;font-weight:700;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:8px;"><span style="font-size:1.1rem;">📺</span> Multi Episode System <span style="font-size:.72rem;font-weight:400;color:var(--text3);margin-left:4px;">(optional)</span></div>
+          <div id="episodesContainer"></div>
+          <button type="button" class="btn-ep-add" onclick="addEpisodeRow()">＋ Add Episode</button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveMovie()">💾 Save Movie</button>
+          <button class="btn btn-outline" onclick="closeMovieForm()">Cancel</button>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎬</div>All Movies (<span id="movieCount">0</span>)</div>
+        <div style="margin-bottom:14px;"><input type="text" class="form-input" placeholder="Search movies..." style="max-width:300px;" oninput="filterAdminMovies(this.value)"></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Thumb</th><th>Title</th><th>Category</th><th>Type</th><th>Views</th><th>Actions</th></tr></thead>
+            <tbody id="moviesTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADS -->
+    <div class="panel" id="panel-ads">
+      <div class="page-header"><div class="page-title">📢 Ad Monetization Settings</div><div class="page-subtitle">Configure Adsterra, Monetag, and ad unlock system</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">⚙️</div>Ad Network Configuration</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Adsterra Smartlink URL</label><input type="url" class="form-input" id="adAdsterraLink" placeholder="https://..."></div>
+          <div class="form-group"><label class="form-label">Monetag Smartlink URL</label><input type="url" class="form-input" id="adMonetagLink" placeholder="https://..."></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ad Mode</label>
+          <div class="ad-mode-grid">
+            <div class="ad-mode-opt selected" data-mode="adsterra" onclick="selectAdMode('adsterra')"><div class="ad-mode-icon">🔵</div><div class="ad-mode-name">Adsterra Only</div><div class="ad-mode-desc">Use Adsterra smartlink</div></div>
+            <div class="ad-mode-opt" data-mode="monetag" onclick="selectAdMode('monetag')"><div class="ad-mode-icon">🟣</div><div class="ad-mode-name">Monetag Only</div><div class="ad-mode-desc">Use Monetag smartlink</div></div>
+            <div class="ad-mode-opt" data-mode="rotation" onclick="selectAdMode('rotation')"><div class="ad-mode-icon">🔄</div><div class="ad-mode-name">Both (Rotation)</div><div class="ad-mode-desc">Alternate between both</div></div>
+          </div>
+          <input type="hidden" id="adMode" value="adsterra">
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Required Ad Count</label><input type="number" class="form-input" id="adRequired" value="5" min="1" max="20"></div>
+          <div class="form-group" style="display:flex;align-items:flex-end;"><label class="toggle-wrap" style="margin-bottom:12px;"><label class="toggle"><input type="checkbox" id="adsEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Ad Unlock System</span></label></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAdsConfig()">💾 Save Ad Settings</button>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📊</div>Ad Performance</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.2);border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.5rem;margin-bottom:6px;">📢</div><div style="font-size:1.4rem;font-weight:700;" id="adsClicksPreview">0</div><div style="font-size:.78rem;color:var(--text3);">Total Ad Clicks</div></div>
+          <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.5rem;margin-bottom:6px;">💰</div><div style="font-size:.78rem;color:var(--text3);margin-top:6px;">Configure ad networks above to start earning</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNERS -->
+    <div class="panel" id="panel-banners">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div><div class="page-title">🖼️ Banner Management</div><div class="page-subtitle">Control hero slider banners</div></div>
+        <button class="btn btn-primary" onclick="openBannerForm()">➕ Add Banner</button>
+      </div>
+      <div class="glass-card" id="bannerForm" style="display:none;">
+        <div class="card-title"><div class="card-title-icon">🖼️</div><span id="bannerFormTitle">Add New Banner</span></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Banner Title</label><input type="text" class="form-input" id="bTitle" placeholder="Banner title"></div>
+          <div class="form-group"><label class="form-label">Banner Link (optional)</label><input type="url" class="form-input" id="bLink" placeholder="https://..."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Image URL</label><input type="url" class="form-input" id="bImageUrl" placeholder="https://..."></div>
+          <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input" id="bDesc" placeholder="Short description"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Upload Banner Image</label>
+            <div class="upload-area" onclick="document.getElementById('bImageFile').click()">
+              <div class="upload-icon">🖼️</div><div class="upload-text">Click to upload banner (16:9 recommended)</div>
+              <input type="file" id="bImageFile" accept="image/*" style="display:none" onchange="previewBanner(this)">
+              <img class="upload-preview" id="bannerPreview" src="" alt="">
+              <div class="upload-progress" id="bannerProgress"><div class="progress-bar"><div class="progress-fill" id="bannerProgressFill"></div></div><div class="progress-text" id="bannerProgressText">Uploading...</div></div>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Order (display position)</label><input type="number" class="form-input" id="bOrder" value="0" min="0"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveBanner()">💾 Save Banner</button>
+          <button class="btn btn-outline" onclick="closeBannerForm()">Cancel</button>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🖼️</div>All Banners</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Preview</th><th>Title</th><th>Link</th><th>Order</th><th>Actions</th></tr></thead>
+            <tbody id="bannersTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);">No banners yet.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="panel" id="panel-categories">
+      <div class="page-header"><div class="page-title">🗂️ Category Management</div><div class="page-subtitle">Manage content categories</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">➕</div>Add New Category</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;"><label class="form-label">Category Name</label><input type="text" class="form-input" id="newCatName" placeholder="e.g. Action, Comedy, Sports..."></div>
+          <button class="btn btn-primary" onclick="addCategory()">➕ Add Category</button>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🗂️</div>Current Categories</div>
+        <div class="cat-tags" id="catTagsAdmin"><div class="empty-state"><div class="empty-state-icon">🗂️</div>No categories yet.</div></div>
+      </div>
+    </div>
+
+    <!-- VIP -->
+    <div class="panel" id="panel-vip">
+      <div class="page-header"><div class="page-title">👑 VIP System Control</div><div class="page-subtitle">Manage VIP access globally</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">👑</div>VIP Configuration</div>
+        <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;"><div style="font-size:2rem;">👑</div><div><div style="font-weight:700;">VIP System</div><div style="font-size:.82rem;color:var(--text2);">VIP users bypass all ad requirements and get direct access to movies.</div></div></div>
+          <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="vipEnabled"><span class="slider"></span></label><span class="toggle-label" style="font-weight:600;">Enable VIP System Globally</span></label>
+        </div>
+        <button class="btn btn-accent" onclick="saveVIPSettings()">💾 Save VIP Settings</button>
+      </div>
+    </div>
+
+    <!-- SOCIAL -->
+    <div class="panel" id="panel-social">
+      <div class="page-header"><div class="page-title">🔗 Social Media Links</div><div class="page-subtitle">Update platform social links</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🔗</div>Social Profiles</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">📘 Facebook Page URL</label><input type="url" class="form-input" id="fbLink" placeholder="https://facebook.com/yourpage"></div>
+          <div class="form-group"><label class="form-label">📱 Telegram Channel URL</label><input type="url" class="form-input" id="tgLink" placeholder="https://t.me/yourchannel"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSocialLinks()">💾 Save Social Links</button>
+      </div>
+    </div>
+
+    <!-- SHARE -->
+    <div class="panel" id="panel-share">
+      <div class="page-header"><div class="page-title">📤 Share Settings</div><div class="page-subtitle">Control share targets in user panel</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📤</div>Share Targets</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">📱 WhatsApp Group / Channel Link</label><input type="url" class="form-input" id="shareWhatsapp" placeholder="https://wa.me/..."></div>
+          <div class="form-group"><label class="form-label">✈️ Telegram Group / Channel Link</label><input type="url" class="form-input" id="shareTelegram" placeholder="https://t.me/..."></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveShareSettings()">💾 Save Share Settings</button>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">👁️</div>Preview</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div style="background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.2);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:1.5rem;margin-bottom:6px;">📱</div><div style="font-size:.8rem;font-weight:600;color:#25d366;">WhatsApp</div><div style="font-size:.7rem;color:var(--text3);margin-top:4px;" id="previewWa">Not configured</div></div>
+          <div style="background:rgba(0,136,204,0.08);border:1px solid rgba(0,136,204,0.2);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:1.5rem;margin-bottom:6px;">✈️</div><div style="font-size:.8rem;font-weight:600;color:#0088cc;">Telegram</div><div style="font-size:.7rem;color:var(--text3);margin-top:4px;" id="previewTg">Not configured</div></div>
+          <div style="background:rgba(14,165,233,0.06);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:1.5rem;margin-bottom:6px;">🔗</div><div style="font-size:.8rem;font-weight:600;color:var(--primary);">Copy Link</div><div style="font-size:.7rem;color:var(--text3);margin-top:4px;">Always available</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UI -->
+    <div class="panel" id="panel-ui">
+      <div class="page-header"><div class="page-title">🎨 UI & Branding Control</div><div class="page-subtitle">Customize site appearance</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎨</div>Branding</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Site Title / Name</label><input type="text" class="form-input" id="uiSiteTitle" placeholder="e.g. CineVerse"></div>
+          <div class="form-group"><label class="form-label">Theme Color</label><input type="color" class="form-input" id="uiThemeColor" value="#0ea5e9" style="height:44px;padding:6px;"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quick Color Presets</label>
+          <div class="color-swatches">
+            <div class="swatch active" style="background:#0ea5e9" onclick="setColor('#0ea5e9')"></div>
+            <div class="swatch" style="background:#8b5cf6" onclick="setColor('#8b5cf6')"></div>
+            <div class="swatch" style="background:#ef4444" onclick="setColor('#ef4444')"></div>
+            <div class="swatch" style="background:#10b981" onclick="setColor('#10b981')"></div>
+            <div class="swatch" style="background:#f59e0b" onclick="setColor('#f59e0b')"></div>
+            <div class="swatch" style="background:#ec4899" onclick="setColor('#ec4899')"></div>
+            <div class="swatch" style="background:#06b6d4" onclick="setColor('#06b6d4')"></div>
+            <div class="swatch" style="background:#f97316" onclick="setColor('#f97316')"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveUISettings()">💾 Save UI Settings</button>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="panel" id="panel-notif">
+      <div class="page-header"><div class="page-title">📣 Notification System</div><div class="page-subtitle">Send popup notifications to users</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📣</div>Notification Configuration</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="notifEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Notification Popup</span></label>
+        <div class="form-group"><label class="form-label">Notification Title</label><input type="text" class="form-input" id="notifTitle" placeholder="e.g. 🎉 New Content Available!"></div>
+        <div class="form-group"><label class="form-label">Notification Message</label><textarea class="form-input" id="notifMsg" placeholder="Enter your notification message here..."></textarea></div>
+        <div class="form-group"><label class="form-label">Icon (emoji)</label><input type="text" class="form-input" id="notifIcon" placeholder="📢" style="max-width:100px;"></div>
+        <button class="btn btn-primary" onclick="saveNotifSettings()">💾 Save Notification</button>
+      </div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="panel" id="panel-payment">
+      <div class="page-header"><div class="page-title">💳 Payment Settings</div><div class="page-subtitle">Configure VIP subscription payment methods</div></div>
+      <div class="glass-card"><div class="card-title"><div class="card-title-icon">📱</div>bKash</div><div class="form-group"><label class="form-label">bKash Number</label><input type="tel" class="form-input" id="payBkash" placeholder="01xxxxxxxxx" value="01798090504"></div></div>
+      <div class="glass-card"><div class="card-title"><div class="card-title-icon">💚</div>Nagad</div><div class="form-group"><label class="form-label">Nagad Number</label><input type="tel" class="form-input" id="payNagad" placeholder="01xxxxxxxxx" value="01816626889"></div></div>
+      <div class="glass-card"><div class="card-title"><div class="card-title-icon">💛</div>Binance (USDT TRC20)</div><div class="form-group"><label class="form-label">Wallet Address</label><input type="text" class="form-input" id="payBinance" placeholder="TRC20 USDT wallet address"></div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📋</div>Plans Preview</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div style="background:rgba(14,165,233,0.06);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.3rem;font-weight:800;">7 Days</div><div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-top:4px;">200 BDT</div></div>
+          <div style="background:rgba(14,165,233,0.06);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.3rem;font-weight:800;">15 Days</div><div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-top:4px;">400 BDT</div></div>
+          <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:16px;text-align:center;"><div style="font-size:.65rem;font-weight:700;color:#f59e0b;text-transform:uppercase;margin-bottom:2px;">🔥 Best Value</div><div style="font-size:1.3rem;font-weight:800;">30 Days</div><div style="font-size:1.2rem;font-weight:700;color:#f59e0b;margin-top:4px;">600 BDT</div></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="savePaymentSettings()">💾 Save Payment Settings</button>
+    </div>
+
+    <!-- SUBSCRIPTIONS -->
+    <div class="panel" id="panel-subscriptions">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div><div class="page-title">📊 VIP Subscriptions</div><div class="page-subtitle">All subscriber records</div></div>
+        <button class="btn btn-outline" onclick="loadSubscriptions()">🔄 Refresh</button>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+        <div class="stat-card" style="--stat-color:#f59e0b"><div class="stat-icon">👑</div><div class="stat-val" id="statSubTotal">0</div><div class="stat-label">Total</div></div>
+        <div class="stat-card" style="--stat-color:#ef4444"><div class="stat-icon">⏳</div><div class="stat-val" id="statSubPending">0</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card" style="--stat-color:#10b981"><div class="stat-icon">✅</div><div class="stat-val" id="statSubActive">0</div><div class="stat-label">Active Now</div></div>
+        <div class="stat-card" style="--stat-color:#0ea5e9"><div class="stat-icon">💰</div><div class="stat-val" id="statSubRevenue">0</div><div class="stat-label">Total BDT</div></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon" style="background:linear-gradient(135deg,#ef4444,#f59e0b);">⏳</div>Pending Payments <span id="pendingBadge" style="margin-left:8px;background:rgba(239,68,68,0.2);color:#ef4444;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px;"></span></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>VIP Key</th><th>Mobile</th><th>Method</th><th>Trx ID</th><th>Plan</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="pendingTableBody"><tr><td colspan="7" style="text-align:center;color:var(--text3);">No pending payments.</td></tr></tbody></table></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📋</div>All Subscribers</div>
+        <div style="margin-bottom:14px;"><input type="text" class="form-input" placeholder="Search by key or mobile..." style="max-width:320px;" oninput="filterSubs(this.value)"></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>VIP Key</th><th>Mobile</th><th>Method</th><th>Plan</th><th>Amount</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead><tbody id="subsTableBody"><tr><td colspan="8" style="text-align:center;color:var(--text3);">Loading...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- UNLOCK SETTINGS -->
+    <div class="panel" id="panel-unlock">
+      <div class="page-header"><div class="page-title">🔓 Advanced Unlock Settings</div><div class="page-subtitle">Configure all monetization unlock systems</div></div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📶</div>Multi-Step Unlock</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="stepEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Multi-Step Unlock</span></label>
+        <div class="form-row three">
+          <div class="form-group"><label class="form-label">Number of Steps</label><input type="number" class="form-input" id="totalSteps" value="3" min="2" max="10"></div>
+          <div class="form-group"><label class="form-label">Ads per Step</label><input type="number" class="form-input" id="adsPerStep" value="2" min="1" max="10"></div>
+          <div class="form-group"><label class="form-label">Countdown (secs/step)</label><input type="number" class="form-input" id="countdownSecs" value="15" min="5" max="60"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Step Labels (one per line)</label><textarea class="form-input" id="stepTexts" placeholder="Step 1: Watch Ads&#10;Step 2: Verify&#10;Step 3: Final Unlock" style="min-height:80px;"></textarea></div>
+        <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="countdownEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Countdown Timer Between Ads</span></label>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">👁️</div>Preview Before Unlock</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="previewEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Preview Before Unlock</span></label>
+        <div class="form-group"><label class="form-label">Preview Duration (seconds)</label><input type="number" class="form-input" id="previewDuration" value="10" min="5" max="60" style="max-width:180px;"></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎞️</div>Scene-Based Unlock</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="sceneEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Scene-Based Unlock</span></label>
+        <div class="form-group"><label class="form-label">Number of Parts</label><input type="number" class="form-input" id="sceneParts" value="3" min="2" max="10" style="max-width:180px;"></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎡</div>Gamified Spin Wheel</div>
+        <label class="toggle-wrap" style="margin-bottom:16px;"><label class="toggle"><input type="checkbox" id="gamifyEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Gamified Unlock</span></label>
+        <label class="toggle-wrap" style="margin-bottom:16px;"><label class="toggle"><input type="checkbox" id="spinEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Spin Wheel</span></label>
+        <div class="form-group"><label class="form-label">Max Spins Per Day</label><input type="number" class="form-input" id="maxSpinsPerDay" value="5" min="1" max="20" style="max-width:180px;"></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🔴</div>Fake Live Activity</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="fakeActivityEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Fake Live Activity Bar</span></label>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Base Viewers Count</label><input type="number" class="form-input" id="fakeViewers" value="1245" min="100" oninput="updateFakePreview()"></div>
+          <div class="form-group"><label class="form-label">Base Unlocking Count</label><input type="number" class="form-input" id="fakeUnlocking" value="850" min="50" oninput="updateFakePreview()"></div>
+        </div>
+        <div style="background:rgba(14,165,233,0.06);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.78rem;color:var(--text3);">💡 Preview: <strong style="color:var(--text);" id="fakePreviewText">🔴 LIVE · 1,245 users watching · 850 unlocking</strong></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">📢</div>Smart Ad Redirect</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="smartRedirectEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Smart Ad Redirect on Buttons</span></label>
+        <div class="form-group"><label class="form-label">Redirect Delay (ms)</label><input type="number" class="form-input" id="smartRedirectDelay" value="2000" min="500" max="10000" step="500" style="max-width:220px;"></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎁</div>Reward Unlock System</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="rewardEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Daily Reward Unlock</span></label>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Ads Required for Reward</label><input type="number" class="form-input" id="rewardAdsRequired" value="10" min="1" max="50"></div>
+          <div class="form-group"><label class="form-label">Daily Reward Limit</label><input type="number" class="form-input" id="rewardDailyLimit" value="1" min="1" max="10"></div>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">✈️</div>Telegram Join Gate</div>
+        <label class="toggle-wrap" style="margin-bottom:18px;"><label class="toggle"><input type="checkbox" id="telegramGateEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Telegram Join Gate</span></label>
+        <div class="form-group"><label class="form-label">Telegram Channel/Group Link</label><input type="url" class="form-input" id="telegramGateLink" placeholder="https://t.me/yourchannel"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:14px;font-size:1rem;" onclick="saveUnlockSettings()">💾 Save All Unlock Settings</button>
+    </div>
+
+    <!-- FEATURE CONTROL PANEL -->
+    <div class="panel" id="panel-features">
+      <div class="page-header"><div class="page-title">🔧 Feature Control Panel</div><div class="page-subtitle">Enable or disable all user experience features — all saved to Firestore</div></div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">👁️</div>Hover / Tap Preview</div>
+        <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="featPreviewEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Hover Preview (silent video on movie cards)</span></label>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">▶</div>Continue Watching</div>
+        <label class="toggle-wrap" style="margin-bottom:14px;"><label class="toggle"><input type="checkbox" id="featCWEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Continue Watching Section</span></label>
+        <div class="form-group"><label class="form-label">Max Items to Show</label><input type="number" class="form-input" id="featCWMax" value="10" min="3" max="20" style="max-width:160px;"></div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">❤️</div>Wishlist / My List</div>
+        <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="featWishlistEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Wishlist (heart icon + My List section)</span></label>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎲</div>Surprise Me Button</div>
+        <label class="toggle-wrap" style="margin-bottom:14px;"><label class="toggle"><input type="checkbox" id="featSurpriseEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Surprise Me Button</span></label>
+        <div class="form-group"><label class="form-label">Filter Category (leave blank = all movies)</label><input type="text" class="form-input" id="featSurpriseCategory" placeholder="e.g. Action"></div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🔥</div>Trending / Live Tags</div>
+        <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="featTrendingEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Trending Tags on Movie Cards</span></label>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎞️</div>Reels / Short Clips</div>
+        <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="featReelsEnabled" checked><span class="slider"></span></label><span class="toggle-label">Enable Reels Section on Homepage</span></label>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🔔</div>Smart Notification Popups</div>
+        <label class="toggle-wrap" style="margin-bottom:16px;"><label class="toggle"><input type="checkbox" id="featNotifEnabled"><span class="slider"></span></label><span class="toggle-label">Enable Smart Notification Popups</span></label>
+        <div class="form-group"><label class="form-label">Frequency (minutes between popups)</label><input type="number" class="form-input" id="featNotifFreq" value="5" min="1" max="60" style="max-width:160px;"></div>
+        <div class="form-group">
+          <label class="form-label">Notification Messages (JSON Array)</label>
+          <textarea class="form-input json-editor" id="featNotifMessages" placeholder='[{"icon":"🎬","title":"New Movie!","message":"Check out the latest!"}]' oninput="validateNotifJson(this)"></textarea>
+          <div class="json-hint" id="jsonHint">
+            ✅ Format: <code>[{"icon":"🎬","title":"Title here","message":"Message here"}]</code><br>
+            Each object must have: <strong>icon</strong>, <strong>title</strong>, <strong>message</strong>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn btn-outline btn-sm" onclick="insertSampleNotif()">📋 Insert Sample JSON</button>
+          <button class="btn btn-outline btn-sm" onclick="validateAndShowNotif()">✅ Validate JSON</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;padding:14px;font-size:1rem;" onclick="saveFeatureSettings()">💾 Save All Feature Settings</button>
+    </div>
+
+    <!-- REELS -->
+    <div class="panel" id="panel-reels">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div><div class="page-title">🎞️ Reels / Short Clips</div><div class="page-subtitle">Manage short clip previews on homepage</div></div>
+        <button class="btn btn-primary" onclick="openReelForm()">➕ Add Reel</button>
+      </div>
+      <div class="glass-card" id="reelForm" style="display:none;">
+        <div class="card-title"><div class="card-title-icon">🎞️</div><span id="reelFormTitle">Add New Reel</span></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Reel Title</label><input type="text" class="form-input" id="rTitle" placeholder="Short clip title"></div>
+          <div class="form-group"><label class="form-label">Linked Movie ID (optional)</label><input type="text" class="form-input" id="rMovieId" placeholder="Movie ID to open on click"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video URL <span style="color:var(--text3);font-weight:400;">(direct .mp4 only)</span></label>
+          <input type="url" class="form-input" id="rVideoUrl" placeholder="https://example.com/clip.mp4" oninput="validateReelVideoUrl(this)">
+          <div class="url-warn" id="rVideoUrlWarn">⚠️ Use a direct .mp4 link. Google Drive preview links are not supported.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Thumbnail URL</label>
+            <input type="text" class="form-input" id="rThumbnailUrl" name="thumbnailUrl" placeholder="Enter thumbnail image URL">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Access Type</label>
+            <select class="form-input" id="rAccessType" name="accessType">
+              <option value="free">🆓 Free — play instantly</option>
+              <option value="locked">🔒 Locked — requires unlock</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveReel()">💾 Save Reel</button>
+          <button class="btn btn-outline" onclick="closeReelForm()">Cancel</button>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><div class="card-title-icon">🎞️</div>All Reels (<span id="reelCount">0</span>)</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Thumbnail</th><th>Title</th><th>Movie ID</th><th>Video URL</th><th>Access</th><th>Actions</th></tr></thead>
+            <tbody id="reelsTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);">No reels yet.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp }            from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+// ─── CONFIG ───
+const ADMIN_EMAIL = "rpora02@gmail.com";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDjB1uD7CuYplHD2AeJBk4ZtiEk5d8fWXQ",
+  authDomain: "hallo22.firebaseapp.com",
+  databaseURL: "https://hallo22-default-rtdb.firebaseio.com",
+  projectId: "hallo22",
+  storageBucket: "hallo22.firebasestorage.app",
+  messagingSenderId: "879898689062",
+  appId: "1:879898689062:web:59e5ecf8696b82cae770e7",
+  measurementId: "G-93KSBKZ01K"
+};
+
+const app = initializeApp(firebaseConfig);
+
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6Lchsb8sAAAAAHrL66I1lmj0lJFTZVODSnPdXCeY'),
+  isTokenAutoRefreshEnabled: true
+});
+
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+// ─── STATE ───
+let movies = [], banners = [], categories = [], settings = {}, adsConfig = {};
+let editingMovieId = null, editingBannerId = null, editingReelId = null;
+let thumbUploadUrl = '', bannerUploadUrl = '';
+let selectedAdMode = 'adsterra';
+let allSubs = [], reelsList = [];
+
+// ─── AUTH ───
+function showLogin() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('accessDenied').style.display = 'none';
+}
+function showDashboard(user) {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('accessDenied').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById('adminName').textContent = user.email || 'Admin';
+  loadAll();
+}
+function showAccessDenied() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('accessDenied').style.display = 'flex';
+}
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    if (user.email === ADMIN_EMAIL) showDashboard(user);
+    else showAccessDenied();
+  } else {
+    showLogin();
+  }
+});
+
+window.doLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtn');
+  errEl.style.display = 'none';
+  if (!email) { errEl.textContent = '⚠️ Please enter your admin email.'; errEl.style.display = 'block'; return; }
+  if (!pass)  { errEl.textContent = '⚠️ Please enter the admin password.'; errEl.style.display = 'block'; return; }
+  btn.textContent = '⏳ Signing in...'; btn.disabled = true;
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    if (cred.user.email !== ADMIN_EMAIL) {
+      await signOut(auth);
+      errEl.textContent = '🚫 Access Denied. Unauthorized account.';
+      errEl.style.display = 'block';
+      document.getElementById('loginPass').value = '';
+    }
+  } catch(e) {
+    let msg = '❌ Login failed. Check your credentials.';
+    if (['auth/user-not-found','auth/wrong-password','auth/invalid-credential'].includes(e.code)) msg = '❌ Incorrect email or password.';
+    else if (e.code === 'auth/too-many-requests') msg = '⚠️ Too many attempts. Try again later.';
+    else if (e.code === 'auth/invalid-email') msg = '❌ Invalid email format.';
+    errEl.textContent = msg; errEl.style.display = 'block';
+    const box = document.querySelector('.login-box');
+    [[-8,0],[8,80],[-5,160],[0,240]].forEach(([x,t]) => setTimeout(() => box.style.transform = `translateX(${x}px)`, t));
+  } finally { btn.textContent = '🔐 Access Dashboard'; btn.disabled = false; }
+};
+
+window.doLogout = async function() { try { await signOut(auth); } catch(e) {} };
+window.togglePassVis = function() {
+  const i = document.getElementById('loginPass'), b = document.getElementById('passVisBtn');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  b.textContent = i.type === 'password' ? '👁️' : '🙈';
+};
+window.toggleSidebar = function() { document.getElementById('sidebar').classList.toggle('open'); };
+
+// ─── LOAD ALL ───
+async function loadAll() {
+  await Promise.all([
+    loadSettings(), loadAdsConfig(), loadMovies(), loadBanners(), loadCategories(),
+    loadAnalytics(), loadPaymentSettings(), loadSubscriptions(),
+    loadUnlockSettings(), loadFeatureSettings(), loadReelsAdmin()
+  ]);
+}
+
+// ─── SETTINGS ───
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'main'));
+    if (!snap.exists()) return;
+    settings = snap.data();
+    const set = (id, val) => { const el = document.getElementById(id); if (el) { if (el.type === 'checkbox') el.checked = !!val; else el.value = val || ''; } };
+    set('fbLink',        settings.facebookLink || '');
+    set('tgLink',        settings.telegramLink || '');
+    set('uiSiteTitle',   settings.siteTitle    || '');
+    set('uiThemeColor',  settings.themeColor   || '#0ea5e9');
+    set('vipEnabled',    settings.vipEnabled);
+    set('notifEnabled',  settings.notifEnabled);
+    set('notifTitle',    settings.notifTitle   || '');
+    set('notifMsg',      settings.notifMsg     || '');
+    set('notifIcon',     settings.notifIcon    || '📢');
+    const wa = settings.whatsappShareLink || '', tg = settings.telegramShareLink || '';
+    set('shareWhatsapp', wa); set('shareTelegram', tg);
+    document.getElementById('previewWa').textContent = wa ? '✅ Configured' : 'Not configured';
+    document.getElementById('previewTg').textContent = tg ? '✅ Configured' : 'Not configured';
+  } catch(e) { console.warn('Settings load:', e.message); }
+}
+
+async function loadAdsConfig() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'ads'));
+    if (!snap.exists()) return;
+    adsConfig = snap.data();
+    document.getElementById('adAdsterraLink').value = adsConfig.adsterraLink || '';
+    document.getElementById('adMonetagLink').value  = adsConfig.monetagLink  || '';
+    document.getElementById('adRequired').value     = adsConfig.requiredAds  || 5;
+    document.getElementById('adsEnabled').checked   = adsConfig.adsEnabled   !== false;
+    selectAdMode(adsConfig.adMode || 'adsterra');
+  } catch(e) { console.warn('Ads config:', e.message); }
+}
+
+async function loadMovies() {
+  try {
+    const snap = await getDocs(collection(db, 'movies'));
+    movies = []; snap.forEach(d => movies.push({ id: d.id, ...d.data() }));
+    renderMoviesTable(); renderRecentMovies();
+    document.getElementById('movieCount').textContent = movies.length;
+    document.getElementById('statMovies').textContent = movies.length;
+    updateCategorySelect();
+  } catch(e) { document.getElementById('moviesTableBody').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);">Error loading movies.</td></tr>`; }
+}
+
+async function loadBanners() {
+  try {
+    const snap = await getDocs(query(collection(db, 'banners'), orderBy('order', 'asc')));
+    banners = []; snap.forEach(d => banners.push({ id: d.id, ...d.data() }));
+    renderBannersTable();
+    document.getElementById('statBanners').textContent = banners.length;
+  } catch(e) { console.warn('Banners:', e.message); }
+}
+
+async function loadCategories() {
+  try {
+    const snap = await getDocs(collection(db, 'categories'));
+    categories = []; snap.forEach(d => categories.push({ id: d.id, name: d.data().name || d.id }));
+    renderCatTags(); updateCategorySelect();
+  } catch(e) { console.warn('Categories:', e.message); }
+}
+
+async function loadAnalytics() {
+  try {
+    const snap = await getDoc(doc(db, 'analytics', 'main'));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    document.getElementById('statViews').textContent        = d.totalViews  || 0;
+    document.getElementById('statClicks').textContent       = d.totalClicks || 0;
+    document.getElementById('adsClicksPreview').textContent = d.totalClicks || 0;
+  } catch(e) { console.warn('Analytics:', e.message); }
+}
+
+// ─── PANEL SWITCH ───
+window.showPanel = function(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(`'${name}'`)) n.classList.add('active');
+  });
+  if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+};
+
+// ─── HELPERS ───
+function movieBadge(m) {
+  if (m.contentMode === 'vip') return `<span class="badge-table badge-vip">👑 VIP ONLY</span>`;
+  if (m.contentMode === 'ads') return `<span class="badge-table" style="background:rgba(14,165,233,0.15);color:var(--primary);">📢 VIP+ADS</span>`;
+  return `<span class="badge-table badge-free">🆓 FREE</span>`;
+}
+
+function renderMoviesTable() {
+  const tbody = document.getElementById('moviesTableBody');
+  if (!movies.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);">No movies yet. Add your first movie!</td></tr>`; return; }
+  tbody.innerHTML = movies.map(m => `
+    <tr>
+      <td><img class="table-thumb" src="${m.thumbnail||'https://via.placeholder.com/42x60/0c1a2e/0ea5e9?text=🎬'}" onerror="this.src='https://via.placeholder.com/42x60/0c1a2e/0ea5e9?text=🎬'" alt=""></td>
+      <td style="color:var(--text);font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.title}</td>
+      <td>${m.category||'–'}</td><td>${movieBadge(m)}</td><td>${m.views||0}</td>
+      <td><div class="table-actions">
+        <button class="btn btn-outline btn-sm" onclick="openMovieForm('${m.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMovie('${m.id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function renderRecentMovies() {
+  const tbody = document.getElementById('recentMoviesTbody');
+  const recent = movies.slice(0, 5);
+  if (!recent.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);">No movies yet.</td></tr>`; return; }
+  tbody.innerHTML = recent.map(m => `
+    <tr>
+      <td><img class="table-thumb" src="${m.thumbnail||'https://via.placeholder.com/42x60/0c1a2e/0ea5e9?text=🎬'}" onerror="this.src='https://via.placeholder.com/42x60/0c1a2e/0ea5e9?text=🎬'" alt=""></td>
+      <td style="color:var(--text);font-weight:500;">${m.title}</td>
+      <td>${m.category||'–'}</td><td>${movieBadge(m)}</td><td>${m.views||0}</td>
+    </tr>`).join('');
+}
+
+window.filterAdminMovies = function(q) {
+  const lq = q.toLowerCase();
+  const filtered = movies.filter(m => m.title?.toLowerCase().includes(lq) || m.category?.toLowerCase().includes(lq));
+  const tbody = document.getElementById('moviesTableBody');
+  tbody.innerHTML = filtered.length ? filtered.map(m => `
+    <tr>
+      <td><img class="table-thumb" src="${m.thumbnail||'https://via.placeholder.com/42x60/0c1a2e/0ea5e9?text=🎬'}" onerror="this.src='https://via.placeholder.com/42x60/0c1a2e/0ea5e9?text=🎬'" alt=""></td>
+      <td style="color:var(--text);font-weight:500;">${m.title}</td>
+      <td>${m.category||'–'}</td><td>${movieBadge(m)}</td><td>${m.views||0}</td>
+      <td><div class="table-actions"><button class="btn btn-outline btn-sm" onclick="openMovieForm('${m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMovie('${m.id}')">🗑️</button></div></td>
+    </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--text3);">No matches.</td></tr>`;
+};
+
+function updateCategorySelect() {
+  const sel = document.getElementById('mCategory'); const cur = sel.value;
+  const DEFAULTS = ['Movies','TV Shows','Comedy','Web Series','Offer Cards'];
+  const all = [...DEFAULTS, ...categories.map(c => c.name).filter(n => !DEFAULTS.includes(n))];
+  sel.innerHTML = '<option value="">Select category</option>' + all.map(n => `<option value="${n}">${n}</option>`).join('');
+  sel.value = cur;
+}
+
+window.previewThumb = function(input) {
+  if (!input.files?.[0]) return;
+  const prev = document.getElementById('thumbPreview');
+  prev.src = URL.createObjectURL(input.files[0]); prev.style.display = 'block';
+  uploadFile(input.files[0], 'thumbnails', 'thumbProgress', 'thumbProgressFill', 'thumbProgressText', url => thumbUploadUrl = url);
+};
+
+window.previewBanner = function(input) {
+  if (!input.files?.[0]) return;
+  const prev = document.getElementById('bannerPreview');
+  prev.src = URL.createObjectURL(input.files[0]); prev.style.display = 'block';
+  uploadFile(input.files[0], 'banners', 'bannerProgress', 'bannerProgressFill', 'bannerProgressText', url => bannerUploadUrl = url);
+};
+
+function uploadFile(file, folder, pId, fId, tId, cb) {
+  const pEl = document.getElementById(pId), fEl = document.getElementById(fId), tEl = document.getElementById(tId);
+  pEl.style.display = 'block';
+  const task = uploadBytesResumable(ref(storage, `${folder}/${Date.now()}_${file.name}`), file);
+  task.on('state_changed',
+    s => { const p = Math.round((s.bytesTransferred/s.totalBytes)*100); fEl.style.width = p+'%'; tEl.textContent = `Uploading ${p}%...`; },
+    e => { showToast('error','❌','Upload failed: '+e.message); pEl.style.display='none'; },
+    async () => { cb(await getDownloadURL(task.snapshot.ref)); tEl.textContent='✅ Upload complete!'; showToast('success','✅','Image uploaded!'); }
+  );
+}
+
+window.openMovieForm = function(id) {
+  editingMovieId = id || null;
+  document.getElementById('movieForm').style.display = 'block';
+  document.getElementById('movieFormTitle').textContent = id ? 'Edit Movie' : 'Add New Movie';
+  if (id) {
+    const m = movies.find(x => x.id === id);
+    if (m) {
+      document.getElementById('mTitle').value        = m.title       || '';
+      document.getElementById('mCategory').value     = m.category    || '';
+      document.getElementById('mDesc').value         = m.description || '';
+      document.getElementById('mVideoLink').value    = m.videoLink   || '';
+      document.getElementById('mThumbUrl').value     = m.thumbnail   || '';
+      document.getElementById('mYear').value         = m.year        || '';
+      document.getElementById('mDuration').value     = m.duration    || '';
+      document.getElementById('mRating').value       = m.rating      || '';
+      document.getElementById('mNew').checked        = m.isNew       || false;
+      document.getElementById('mTrending').checked   = m.trending    || false;
+      document.getElementById('mPreviewUrl').value   = m.previewUrl  || '';
+      document.getElementById('mTrendingLabel').value= m.trendingLabel|| '';
+      document.getElementById('mWatchingCount').value= m.watchingCount|| '';
+      // shortClip fields
+      const sc = m.shortClip || {};
+      document.getElementById('mClipVideoUrl').value   = sc.videoUrl   || '';
+      document.getElementById('mClipThumbUrl').value   = sc.thumbnailUrl|| '';
+      document.getElementById('mClipAccessType').value = sc.accessType || 'free';
+      setContentMode(m.contentMode || (m.isVIP ? 'vip' : 'free'));
+      setEpisodes(m.episodes || []);
+      thumbUploadUrl = m.thumbnail || '';
+      if (m.thumbnail) { const p = document.getElementById('thumbPreview'); p.src = m.thumbnail; p.style.display = 'block'; }
+    }
+  } else {
+    ['mTitle','mCategory','mDesc','mVideoLink','mThumbUrl','mYear','mDuration','mRating','mPreviewUrl','mTrendingLabel','mWatchingCount','mClipVideoUrl','mClipThumbUrl']
+      .forEach(i => document.getElementById(i).value = '');
+    document.getElementById('mClipAccessType').value = 'free';
+    document.getElementById('mNew').checked = document.getElementById('mTrending').checked = false;
+    setContentMode('free');
+    resetEpisodes();
+    document.getElementById('thumbPreview').style.display = 'none';
+    thumbUploadUrl = '';
+  }
+  document.getElementById('movieForm').scrollIntoView({ behavior: 'smooth' });
+};
+
+
+let _epCount = 0;
+window.addEpisodeRow = function(ep) {
+  _epCount++;
+  const id = _epCount;
+  const div = document.createElement('div');
+  div.className = 'ep-row';
+  div.dataset.epid = id;
+  div.innerHTML = `
+    <div class="form-group"><label class="form-label">Ep #</label><input type="number" class="form-input ep-num" min="1" placeholder="${id}" value="${ep ? ep.ep : id}"></div>
+    <div class="form-group"><label class="form-label">Episode Title</label><input type="text" class="form-input ep-title" placeholder="Episode Title" value="${ep ? (ep.title||'').replace(/"/g,'&quot;') : ''}"></div>
+    <div class="form-group"><label class="form-label">Video URL <span style="color:var(--text3);font-weight:400;font-size:.72rem;">(mp4, iframe, terabox, any link)</span></label><input type="text" class="form-input ep-url" placeholder="https://... (any video link)" value="${ep ? ((ep.url||ep.videoUrl||'').replace(/"/g,'&quot;')) : ''}"></div>
+    <button type="button" class="btn-ep-del" onclick="this.closest('.ep-row').remove()">🗑</button>
+  `;
+  document.getElementById('episodesContainer').appendChild(div);
+};
+
+function getEpisodes() {
+  const rows = document.querySelectorAll('#episodesContainer .ep-row');
+  const eps = [];
+  rows.forEach(row => {
+    const url = row.querySelector('.ep-url').value.trim();
+    if (!url) return;
+    eps.push({
+      ep:    parseInt(row.querySelector('.ep-num').value) || eps.length + 1,
+      title: row.querySelector('.ep-title').value.trim(),
+      url
+    });
+  });
+  eps.sort((a, b) => a.ep - b.ep);
+  return eps;
+}
+
+function setEpisodes(eps) {
+  document.getElementById('episodesContainer').innerHTML = '';
+  _epCount = 0;
+  (eps || []).forEach(ep => addEpisodeRow(ep));
+}
+
+function resetEpisodes() {
+  document.getElementById('episodesContainer').innerHTML = '';
+  _epCount = 0;
+}
+
+window.closeMovieForm = function() { document.getElementById('movieForm').style.display = 'none'; editingMovieId = null; };
+
+window.saveMovie = async function() {
+  const title = document.getElementById('mTitle').value.trim();
+  if (!title) { showToast('error','❌','Title is required.'); return; }
+  const thumbUrl    = thumbUploadUrl || document.getElementById('mThumbUrl').value.trim();
+  const contentMode = document.getElementById('mContentMode').value || 'free';
+  // build shortClip — only include if videoUrl is provided
+  const clipVideo = document.getElementById('mClipVideoUrl').value.trim();
+  const shortClip = clipVideo ? {
+    videoUrl:     clipVideo,
+    thumbnailUrl: document.getElementById('mClipThumbUrl').value.trim(),
+    accessType:   document.getElementById('mClipAccessType').value || 'free'
+  } : null;
+  const data = {
+    title, category: document.getElementById('mCategory').value,
+    description: document.getElementById('mDesc').value.trim(),
+    videoLink:   document.getElementById('mVideoLink').value.trim(),
+    thumbnail: thumbUrl, year: document.getElementById('mYear').value.trim(),
+    duration:  document.getElementById('mDuration').value.trim(),
+    rating:    document.getElementById('mRating').value.trim(),
+    contentMode, isVIP: contentMode !== 'free',
+    isNew:        document.getElementById('mNew').checked,
+    trending:     document.getElementById('mTrending').checked,
+    previewUrl:   document.getElementById('mPreviewUrl').value.trim(),
+    trendingLabel:document.getElementById('mTrendingLabel').value.trim(),
+    watchingCount:document.getElementById('mWatchingCount').value.trim(),
+    shortClip:    shortClip,
+    episodes:     getEpisodes(),
+    updatedAt: serverTimestamp()
+  };
+  try {
+    if (editingMovieId) { await updateDoc(doc(db,'movies',editingMovieId), data); showToast('success','✅','Movie updated!'); }
+    else { data.createdAt = serverTimestamp(); data.views = 0; await addDoc(collection(db,'movies'), data); showToast('success','✅','Movie added!'); }
+    closeMovieForm(); await loadMovies();
+  } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.deleteMovie = async function(id) {
+  if (!confirm('Delete this movie?')) return;
+  try { await deleteDoc(doc(db,'movies',id)); showToast('success','🗑️','Movie deleted.'); await loadMovies(); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.setContentMode = function(mode) {
+  document.getElementById('mContentMode').value = mode;
+  const s = { free:{l:'modeFreeLabel',b:'rgba(34,197,94,0.5)',bg:'rgba(34,197,94,0.08)'}, ads:{l:'modeAdsLabel',b:'rgba(14,165,233,0.5)',bg:'rgba(14,165,233,0.08)'}, vip:{l:'modeVipLabel',b:'rgba(245,158,11,0.5)',bg:'rgba(245,158,11,0.08)'} };
+  ['free','ads','vip'].forEach(m => { const el = document.getElementById(s[m].l); if (!el) return; el.style.borderColor = m===mode?s[m].b:'var(--border)'; el.style.background = m===mode?s[m].bg:'transparent'; });
+};
+
+window.openBannerForm = function(id) {
+  editingBannerId = id || null;
+  document.getElementById('bannerForm').style.display = 'block';
+  document.getElementById('bannerFormTitle').textContent = id ? 'Edit Banner' : 'Add New Banner';
+  if (id) {
+    const b = banners.find(x => x.id === id);
+    if (b) { document.getElementById('bTitle').value=b.title||''; document.getElementById('bLink').value=b.link||''; document.getElementById('bImageUrl').value=b.imageUrl||''; document.getElementById('bDesc').value=b.description||''; document.getElementById('bOrder').value=b.order??0; bannerUploadUrl=b.imageUrl||''; if(b.imageUrl){const p=document.getElementById('bannerPreview');p.src=b.imageUrl;p.style.display='block';} }
+  } else {
+    ['bTitle','bLink','bImageUrl','bDesc'].forEach(i=>document.getElementById(i).value=''); document.getElementById('bOrder').value=0; document.getElementById('bannerPreview').style.display='none'; bannerUploadUrl='';
+  }
+  document.getElementById('bannerForm').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.closeBannerForm = function() { document.getElementById('bannerForm').style.display='none'; editingBannerId=null; };
+
+window.saveBanner = async function() {
+  const title = document.getElementById('bTitle').value.trim();
+  if (!title) { showToast('error','❌','Title is required.'); return; }
+  const imageUrl = bannerUploadUrl || document.getElementById('bImageUrl').value.trim();
+  const data = { title, link:document.getElementById('bLink').value.trim(), imageUrl, description:document.getElementById('bDesc').value.trim(), order:parseInt(document.getElementById('bOrder').value)||0, updatedAt:serverTimestamp() };
+  try {
+    if (editingBannerId) { await updateDoc(doc(db,'banners',editingBannerId),data); showToast('success','✅','Banner updated!'); }
+    else { data.createdAt=serverTimestamp(); await addDoc(collection(db,'banners'),data); showToast('success','✅','Banner added!'); }
+    closeBannerForm(); await loadBanners();
+  } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.deleteBanner = async function(id) {
+  if (!confirm('Delete this banner?')) return;
+  try { await deleteDoc(doc(db,'banners',id)); showToast('success','🗑️','Banner deleted.'); await loadBanners(); } catch(e) { showToast('error','❌',e.message); }
+};
+
+function renderBannersTable() {
+  const tbody = document.getElementById('bannersTableBody');
+  if (!banners.length) { tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);">No banners yet.</td></tr>`; return; }
+  tbody.innerHTML = banners.map(b=>`
+    <tr>
+      <td>${b.imageUrl?`<img src="${b.imageUrl}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">`:'<div style="width:80px;height:45px;background:var(--card2);border-radius:6px;display:flex;align-items:center;justify-content:center;">🖼️</div>'}</td>
+      <td style="color:var(--text);font-weight:500;">${b.title}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.link?`<a href="${b.link}" target="_blank" style="color:var(--primary);font-size:.8rem;">${b.link}</a>`:'–'}</td>
+      <td>${b.order??0}</td>
+      <td><div class="table-actions"><button class="btn btn-outline btn-sm" onclick="openBannerForm('${b.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteBanner('${b.id}')">🗑️</button></div></td>
+    </tr>`).join('');
+}
+
+window.addCategory = async function() {
+  const name = document.getElementById('newCatName').value.trim();
+  if (!name) { showToast('error','❌','Category name required.'); return; }
+  if (categories.find(c=>c.name.toLowerCase()===name.toLowerCase())) { showToast('warn','⚠️','Already exists.'); return; }
+  try { const r=await addDoc(collection(db,'categories'),{name,createdAt:serverTimestamp()}); categories.push({id:r.id,name}); renderCatTags(); updateCategorySelect(); document.getElementById('newCatName').value=''; showToast('success','✅','Category added!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.deleteCategory = async function(id) {
+  if (!confirm('Delete this category?')) return;
+  try { await deleteDoc(doc(db,'categories',id)); categories=categories.filter(c=>c.id!==id); renderCatTags(); updateCategorySelect(); showToast('success','🗑️','Deleted.'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+function renderCatTags() {
+  const el = document.getElementById('catTagsAdmin');
+  if (!categories.length) { el.innerHTML=`<div class="empty-state"><div class="empty-state-icon">🗂️</div>No categories yet.</div>`; return; }
+  el.innerHTML = categories.map(c=>`<div class="cat-tag">${c.name}<button onclick="deleteCategory('${c.id}')" title="Delete">✕</button></div>`).join('');
+}
+
+window.selectAdMode = function(mode) {
+  selectedAdMode = mode; document.getElementById('adMode').value = mode;
+  document.querySelectorAll('.ad-mode-opt').forEach(o=>o.classList.toggle('selected',o.dataset.mode===mode));
+};
+
+window.saveAdsConfig = async function() {
+  const data = { adsterraLink:document.getElementById('adAdsterraLink').value.trim(), monetagLink:document.getElementById('adMonetagLink').value.trim(), adMode:selectedAdMode, requiredAds:parseInt(document.getElementById('adRequired').value)||5, adsEnabled:document.getElementById('adsEnabled').checked, updatedAt:serverTimestamp() };
+  try { await setDoc(doc(db,'settings','ads'),data); showToast('success','✅','Ad settings saved!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.saveVIPSettings = async function() {
+  try { await setDoc(doc(db,'settings','main'),{...settings,vipEnabled:document.getElementById('vipEnabled').checked,updatedAt:serverTimestamp()},{merge:true}); showToast('success','✅','VIP settings saved!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.saveSocialLinks = async function() {
+  try { await setDoc(doc(db,'settings','main'),{...settings,facebookLink:document.getElementById('fbLink').value.trim(),telegramLink:document.getElementById('tgLink').value.trim(),updatedAt:serverTimestamp()},{merge:true}); showToast('success','✅','Social links saved!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.saveShareSettings = async function() {
+  const wa=document.getElementById('shareWhatsapp').value.trim(), tg=document.getElementById('shareTelegram').value.trim();
+  try {
+    await setDoc(doc(db,'settings','main'),{...settings,whatsappShareLink:wa,telegramShareLink:tg,updatedAt:serverTimestamp()},{merge:true});
+    document.getElementById('previewWa').textContent = wa?'✅ Configured':'Not configured';
+    document.getElementById('previewTg').textContent = tg?'✅ Configured':'Not configured';
+    showToast('success','✅','Share settings saved!');
+  } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.saveUISettings = async function() {
+  try { await setDoc(doc(db,'settings','main'),{...settings,siteTitle:document.getElementById('uiSiteTitle').value.trim(),themeColor:document.getElementById('uiThemeColor').value,updatedAt:serverTimestamp()},{merge:true}); showToast('success','✅','UI settings saved!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.setColor = function(c) { document.getElementById('uiThemeColor').value=c; document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active',s.style.background===c||s.style.backgroundColor===c)); };
+
+window.saveNotifSettings = async function() {
+  try { await setDoc(doc(db,'settings','main'),{...settings,notifEnabled:document.getElementById('notifEnabled').checked,notifTitle:document.getElementById('notifTitle').value.trim(),notifMsg:document.getElementById('notifMsg').value.trim(),notifIcon:document.getElementById('notifIcon').value.trim()||'📢',updatedAt:serverTimestamp()},{merge:true}); showToast('success','✅','Notification settings saved!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+async function loadPaymentSettings() {
+  try {
+    const snap = await getDoc(doc(db,'settings','payment'));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    document.getElementById('payBkash').value   = d.bkash   || '01798090504';
+    document.getElementById('payNagad').value   = d.nagad   || '01816626889';
+    document.getElementById('payBinance').value = d.binance || '';
+  } catch(e) { console.warn('Payment:', e.message); }
+}
+
+window.savePaymentSettings = async function() {
+  const data = { bkash:document.getElementById('payBkash').value.trim(), nagad:document.getElementById('payNagad').value.trim(), binance:document.getElementById('payBinance').value.trim(), updatedAt:serverTimestamp() };
+  if (!data.bkash && !data.nagad && !data.binance) { showToast('warn','⚠️','Enter at least one payment method.'); return; }
+  try { await setDoc(doc(db,'settings','payment'),data); showToast('success','✅','Payment settings saved!'); } catch(e) { showToast('error','❌',e.message); }
+};
+
+async function loadSubscriptions() {
+  try {
+    const snap = await getDocs(collection(db,'subscriptions'));
+    allSubs=[]; snap.forEach(d=>allSubs.push({id:d.id,...d.data()}));
+    renderSubsTable(allSubs); updateSubStats();
+  } catch(e) { document.getElementById('subsTableBody').innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text3);">Error loading subscriptions.</td></tr>`; }
+}
+
+function updateSubStats() {
+  const now=new Date(), pending=allSubs.filter(s=>s.status==='pending').length, active=allSubs.filter(s=>s.status==='approved'&&new Date(s.expiryDate)>now).length, revenue=allSubs.filter(s=>s.status==='approved').reduce((sum,s)=>sum+(parseInt(s.amount)||0),0);
+  document.getElementById('statSubTotal').textContent=allSubs.length; document.getElementById('statSubPending').textContent=pending; document.getElementById('statSubActive').textContent=active; document.getElementById('statSubRevenue').textContent=revenue;
+  const badge=document.getElementById('pendingBadge'); if(badge) badge.textContent=pending>0?`${pending} needs action`:'';
+}
+
+function renderSubsTable(subs) {
+  const pBody=document.getElementById('pendingTableBody'), pending=subs.filter(s=>s.status==='pending');
+  const mIcon=m=>m==='bkash'?'📱':m==='nagad'?'💚':'💛';
+  if(pBody){ if(!pending.length){pBody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);">No pending payments. ✅</td></tr>`;}else{pBody.innerHTML=pending.map(s=>`<tr><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--accent);">${s.key||'—'}</td><td>${s.mobile||'—'}</td><td>${mIcon(s.method)} ${(s.method||'').toUpperCase()}</td><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">${s.trxId||'—'}</td><td>${s.planDays||'—'} Days</td><td style="font-weight:600;">${s.amount||0} BDT</td><td><div class="table-actions"><button class="btn btn-success btn-sm" onclick="approveSub('${s.id}',${s.planDays||7})">✅ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectSub('${s.id}')">❌ Reject</button></div></td></tr>`).join('');} }
+  const tbody=document.getElementById('subsTableBody');
+  if(!subs.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text3);">No subscribers yet.</td></tr>`;return;}
+  const now=new Date(); const statusBadge=s=>{if(s.status==='pending')return`<span class="badge-table" style="background:rgba(245,158,11,0.15);color:#f59e0b;">⏳ Pending</span>`;if(s.status==='rejected')return`<span class="badge-table" style="background:rgba(239,68,68,0.15);color:#ef4444;">❌ Rejected</span>`;if(s.status==='approved'){const alive=s.expiryDate&&new Date(s.expiryDate)>now;return alive?`<span class="badge-table badge-free">✅ Active</span>`:`<span class="badge-table" style="background:rgba(100,116,139,0.15);color:#64748b;">⌛ Expired</span>`;}return`<span class="badge-table">—</span>`;};
+  tbody.innerHTML=subs.map(s=>{const exp=s.expiryDate?new Date(s.expiryDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';return`<tr><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--accent);">${s.key||'—'}</td><td>${s.mobile||'—'}</td><td>${mIcon(s.method)} ${(s.method||'').toUpperCase()}</td><td>${s.planDays||'—'} Days</td><td style="color:var(--success);font-weight:600;">${s.amount||0} BDT</td><td style="font-size:.8rem;">${exp}</td><td>${statusBadge(s)}</td><td><div class="table-actions">${s.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveSub('${s.id}',${s.planDays||7})">✅</button><button class="btn btn-danger btn-sm" onclick="rejectSub('${s.id}')">❌</button>`:`<button class="btn btn-danger btn-sm" onclick="deleteSub('${s.id}')">🗑️</button>`}</div></td></tr>`;}).join('');
+}
+
+window.filterSubs = function(q) { const lq=q.toLowerCase(); renderSubsTable(allSubs.filter(s=>(s.key||'').toLowerCase().includes(lq)||(s.mobile||'').toLowerCase().includes(lq))); };
+
+window.approveSub = async function(id,planDays) {
+  if (!confirm(`Approve this subscription? (${planDays}-day plan)`)) return;
+  const expiry=new Date(Date.now()+planDays*86400000);
+  try { await updateDoc(doc(db,'subscriptions',id),{status:'approved',expiryDate:expiry.toISOString(),approvedAt:serverTimestamp()}); showToast('success','✅',`Approved — expires ${expiry.toLocaleDateString('en-GB')}.`); await loadSubscriptions(); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.rejectSub = async function(id) {
+  if (!confirm('Reject this subscription?')) return;
+  try { await updateDoc(doc(db,'subscriptions',id),{status:'rejected',rejectedAt:serverTimestamp()}); showToast('info','❌','Subscription rejected.'); await loadSubscriptions(); } catch(e) { showToast('error','❌',e.message); }
+};
+
+window.deleteSub = async function(id) {
+  if (!confirm('Delete this record?')) return;
+  try { await deleteDoc(doc(db,'subscriptions',id)); showToast('success','🗑️','Deleted.'); await loadSubscriptions(); } catch(e) { showToast('error','❌',e.message); }
+};
+
+async function loadUnlockSettings() {
+  try {
+    const snap = await getDoc(doc(db,'settings','unlock'));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    const setBool = (id,val,def=false) => { const el=document.getElementById(id); if(el) el.checked=val!==undefined?!!val:def; };
+    const setVal  = (id,val,def='') => { const el=document.getElementById(id); if(el) el.value=val!==undefined?val:def; };
+    setBool('stepEnabled',       d.stepEnabled);
+    setVal( 'totalSteps',        d.totalSteps,   3);
+    setVal( 'adsPerStep',        d.adsPerStep,   2);
+    setVal( 'countdownSecs',     d.countdownSecs,15);
+    setBool('countdownEnabled',  d.countdownEnabled, true);
+    setVal( 'stepTexts',         (d.stepTexts||[]).join('\n'));
+    setBool('previewEnabled',    d.previewEnabled);
+    setVal( 'previewDuration',   d.previewDuration, 10);
+    setBool('sceneEnabled',      d.sceneEnabled);
+    setVal( 'sceneParts',        d.sceneParts,   3);
+    setBool('gamifyEnabled',     d.gamifyEnabled);
+    setBool('spinEnabled',       d.spinEnabled, true);
+    setVal( 'maxSpinsPerDay',    d.maxSpinsPerDay, 5);
+    setBool('fakeActivityEnabled',d.fakeActivityEnabled);
+    setVal( 'fakeViewers',       d.fakeViewers,  1245);
+    setVal( 'fakeUnlocking',     d.fakeUnlocking, 850);
+    setBool('smartRedirectEnabled',d.smartRedirectEnabled);
+    setVal( 'smartRedirectDelay', d.smartRedirectDelay, 2000);
+    setBool('rewardEnabled',     d.rewardEnabled);
+    setVal( 'rewardAdsRequired', d.rewardAdsRequired, 10);
+    setVal( 'rewardDailyLimit',  d.rewardDailyLimit, 1);
+    setBool('telegramGateEnabled',d.telegramGateEnabled);
+    setVal( 'telegramGateLink',  d.telegramGateLink);
+    updateFakePreview();
+  } catch(e) { console.warn('Unlock settings:', e.message); }
+}
+
+window.updateFakePreview = function() {
+  const v=document.getElementById('fakeViewers')?.value||1245, u=document.getElementById('fakeUnlocking')?.value||850;
+  const el=document.getElementById('fakePreviewText');
+  if(el) el.textContent=`🔴 LIVE · ${parseInt(v).toLocaleString()} users watching · ${parseInt(u).toLocaleString()} unlocking`;
+};
+
+window.saveUnlockSettings = async function() {
+  const stepTexts = (document.getElementById('stepTexts').value.trim()||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const get = id => document.getElementById(id);
+  const data = {
+    stepEnabled:           get('stepEnabled').checked,
+    totalSteps:            parseInt(get('totalSteps').value)||3,
+    adsPerStep:            parseInt(get('adsPerStep').value)||2,
+    countdownSecs:         parseInt(get('countdownSecs').value)||15,
+    countdownEnabled:      get('countdownEnabled').checked,
+    stepTexts,
+    previewEnabled:        get('previewEnabled').checked,
+    previewDuration:       parseInt(get('previewDuration').value)||10,
+    sceneEnabled:          get('sceneEnabled').checked,
+    sceneParts:            parseInt(get('sceneParts').value)||3,
+    gamifyEnabled:         get('gamifyEnabled').checked,
+    spinEnabled:           get('spinEnabled').checked,
+    maxSpinsPerDay:        parseInt(get('maxSpinsPerDay').value)||5,
+    fakeActivityEnabled:   get('fakeActivityEnabled').checked,
+    fakeViewers:           parseInt(get('fakeViewers').value)||1245,
+    fakeUnlocking:         parseInt(get('fakeUnlocking').value)||850,
+    smartRedirectEnabled:  get('smartRedirectEnabled').checked,
+    smartRedirectDelay:    parseInt(get('smartRedirectDelay').value)||2000,
+    rewardEnabled:         get('rewardEnabled').checked,
+    rewardAdsRequired:     parseInt(get('rewardAdsRequired').value)||10,
+    rewardDailyLimit:      parseInt(get('rewardDailyLimit').value)||1,
+    telegramGateEnabled:   get('telegramGateEnabled').checked,
+    telegramGateLink:      get('telegramGateLink').value.trim(),
+    updatedAt: serverTimestamp()
+  };
+  try { await setDoc(doc(db,'settings','unlock'),data); showToast('success','✅','Unlock settings saved! User panel updated instantly.'); } catch(e) { showToast('error','❌','Save failed: '+e.message); }
+};
+
+// ─── FEATURE SETTINGS ─── (with robust JSON handling)
+async function loadFeatureSettings() {
+  try {
+    const snap = await getDoc(doc(db,'settings','features'));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    const setBool = (id,val,def=true) => { const el=document.getElementById(id); if(el) el.checked=val!==undefined?!!val:def; };
+    setBool('featPreviewEnabled',   d.previewEnabled,           true);
+    setBool('featCWEnabled',        d.continueWatchingEnabled,  true);
+    const cwMax = document.getElementById('featCWMax'); if(cwMax) cwMax.value = d.cwMaxItems||10;
+    setBool('featWishlistEnabled',  d.wishlistEnabled,          true);
+    setBool('featSurpriseEnabled',  d.surpriseEnabled,          true);
+    const sc = document.getElementById('featSurpriseCategory'); if(sc) sc.value = d.surpriseCategory||'';
+    setBool('featTrendingEnabled',  d.trendingEnabled,          true);
+    setBool('featReelsEnabled',     d.reelsEnabled,             true);
+    setBool('featNotifEnabled',     d.smartNotifEnabled,        false);
+    const freq = document.getElementById('featNotifFreq'); if(freq) freq.value = d.smartNotifFrequencyMin||5;
+    // Load notification messages safely
+    const msgEl = document.getElementById('featNotifMessages');
+    if (msgEl && d.smartNotifMessages) {
+      if (Array.isArray(d.smartNotifMessages) && d.smartNotifMessages.length > 0) {
+        msgEl.value = JSON.stringify(d.smartNotifMessages, null, 2);
+        msgEl.classList.remove('json-invalid'); msgEl.classList.add('json-valid');
+      }
+    }
+  } catch(e) { console.warn('Feature settings:', e.message); }
+}
+
+window.validateNotifJson = function(el) {
+  const raw = el.value.trim();
+  if (!raw) { el.classList.remove('json-valid','json-invalid'); updateJsonHint('neutral'); return; }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error('Must be an array');
+    const invalid = parsed.find(item => !item.icon || !item.title || !item.message);
+    if (invalid) throw new Error('Each item needs: icon, title, message');
+    el.classList.remove('json-invalid'); el.classList.add('json-valid');
+    updateJsonHint('valid', `✅ Valid JSON — ${parsed.length} notification(s) ready`);
+  } catch(e) {
+    el.classList.remove('json-valid'); el.classList.add('json-invalid');
+    updateJsonHint('invalid', `❌ ${e.message}`);
+  }
+};
+
+function updateJsonHint(state, msg) {
+  const el = document.getElementById('jsonHint');
+  if (!el) return;
+  if (state === 'valid')   { el.style.color='#10b981'; el.textContent = msg; }
+  else if (state === 'invalid') { el.style.color='#ef4444'; el.textContent = msg; }
+  else { el.style.color=''; el.innerHTML='Format: <code>[{"icon":"🎬","title":"Title","message":"Message"}]</code>'; }
+}
+
+window.insertSampleNotif = function() {
+  const sample = [
+    { "icon": "🎬", "title": "New Movie Added!", "message": "Check out the latest content on CineVerse!" },
+    { "icon": "🔥", "title": "Trending Now",     "message": "See what everyone is watching right now."  },
+    { "icon": "👑", "title": "Go VIP Today!",    "message": "Skip all ads and enjoy unlimited streaming." }
+  ];
+  const el = document.getElementById('featNotifMessages');
+  el.value = JSON.stringify(sample, null, 2);
+  validateNotifJson(el);
+  showToast('info','📋','Sample JSON inserted!');
+};
+
+window.validateAndShowNotif = function() {
+  const el = document.getElementById('featNotifMessages');
+  validateNotifJson(el);
+  const isValid = el.classList.contains('json-valid');
+  showToast(isValid?'success':'error', isValid?'✅':'❌', isValid?'JSON is valid and ready to save!':'Fix the JSON errors before saving.');
+};
+
+window.saveFeatureSettings = async function() {
+  // ── Parse + validate notification messages ──
+  let msgs = [];
+  const rawEl  = document.getElementById('featNotifMessages');
+  const rawText = rawEl.value.trim();
+
+  if (rawText) {
+    try {
+      const parsed = JSON.parse(rawText);
+      if (!Array.isArray(parsed)) {
+        showToast('error','❌','Notification messages must be a JSON ARRAY. Wrap items in [ ].');
+        rawEl.classList.add('json-invalid'); rawEl.focus(); return;
+      }
+      for (let i = 0; i < parsed.length; i++) {
+        const item = parsed[i];
+        if (typeof item !== 'object' || !item.title || !item.message) {
+          showToast('error','❌',`Item #${i+1} is missing "title" or "message" field.`);
+          rawEl.classList.add('json-invalid'); rawEl.focus(); return;
+        }
+        // Ensure icon has a default
+        if (!item.icon) item.icon = '🔔';
+        msgs.push({ icon: String(item.icon), title: String(item.title), message: String(item.message) });
+      }
+      rawEl.classList.remove('json-invalid'); rawEl.classList.add('json-valid');
+    } catch(e) {
+      showToast('error','❌','Invalid JSON! Error: ' + e.message);
+      rawEl.classList.add('json-invalid'); rawEl.focus();
+      updateJsonHint('invalid', '❌ '+e.message); return;
+    }
+  }
+
+  const get = id => document.getElementById(id);
+  const data = {
+    previewEnabled:          get('featPreviewEnabled').checked,
+    continueWatchingEnabled: get('featCWEnabled').checked,
+    cwMaxItems:              parseInt(get('featCWMax').value)  || 10,
+    wishlistEnabled:         get('featWishlistEnabled').checked,
+    surpriseEnabled:         get('featSurpriseEnabled').checked,
+    surpriseCategory:        get('featSurpriseCategory').value.trim(),
+    trendingEnabled:         get('featTrendingEnabled').checked,
+    reelsEnabled:            get('featReelsEnabled').checked,
+    smartNotifEnabled:       get('featNotifEnabled').checked,
+    smartNotifFrequencyMin:  parseInt(get('featNotifFreq').value) || 5,
+    smartNotifMessages:      msgs,
+    updatedAt:               serverTimestamp()
+  };
+
+  try {
+    await setDoc(doc(db,'settings','features'), data);
+    showToast('success','✅',`Feature settings saved! ${msgs.length} notification message(s) stored.`);
+  } catch(e) {
+    showToast('error','❌','Save failed: ' + e.message);
+  }
+};
+
+// ─── REELS ───
+function isGDriveLink(url) {
+  return /drive\.google\.com|docs\.google\.com/i.test(url);
+}
+function isMp4Link(url) {
+  return /\.mp4(\?.*)?$/i.test(url.trim());
+}
+window.validateReelVideoUrl = function(input, warnId) {
+  const wId  = warnId || 'rVideoUrlWarn';
+  const warn = document.getElementById(wId);
+  if (!warn) return true;
+  const val  = input.value.trim();
+  if (!val) { warn.classList.remove('visible'); return true; }
+  const bad  = isGDriveLink(val) || !isMp4Link(val);
+  warn.classList.toggle('visible', bad);
+  return !bad;
+};
+
+async function loadReelsAdmin() {
+  try {
+    const snap = await getDocs(query(collection(db,'reels'), orderBy('createdAt','desc')));
+    reelsList=[]; snap.forEach(d=>reelsList.push({id:d.id,...d.data()}));
+    renderReelsTable(); document.getElementById('reelCount').textContent=reelsList.length;
+  } catch(e) {
+    // Fallback: load without orderBy (index may not exist yet)
+    try {
+      const snap = await getDocs(collection(db,'reels'));
+      reelsList=[]; snap.forEach(d=>reelsList.push({id:d.id,...d.data()}));
+      reelsList.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+      renderReelsTable(); document.getElementById('reelCount').textContent=reelsList.length;
+    } catch(e2){}
+  }
+}
+
+function renderReelsTable() {
+  const tbody=document.getElementById('reelsTableBody');
+  if(!reelsList.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);">No reels yet.</td></tr>';return;}
+  tbody.innerHTML=reelsList.map(r=>{
+    const accessBadge = r.accessType==='locked'
+      ? '<span class="badge-table badge-locked">🔒 Locked</span>'
+      : '<span class="badge-table badge-free">🆓 Free</span>';
+    const thumb = r.thumbnailUrl
+      ? `<img src="${r.thumbnailUrl}" style="width:36px;height:54px;object-fit:cover;border-radius:5px;" onerror="this.style.display='none'">`
+      : '<div style="width:36px;height:54px;background:var(--card2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.8rem;">🎞️</div>';
+    return `
+    <tr>
+      <td>${thumb}</td>
+      <td style="font-weight:500;">${r.title||'–'}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">${r.movieId||'–'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem;color:var(--text2);">${r.videoUrl||'–'}</td>
+      <td>${accessBadge}</td>
+      <td><div class="table-actions"><button class="btn btn-outline btn-sm" onclick="openReelForm('${r.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteReel('${r.id}')">🗑️</button></div></td>
+    </tr>`; }).join('');
+}
+
+window.openReelForm = function(id) {
+  editingReelId = id || null;
+  document.getElementById('reelForm').style.display='block';
+  document.getElementById('reelFormTitle').textContent = id?'Edit Reel':'Add New Reel';
+  if(id){
+    const r=reelsList.find(x=>x.id===id);
+    if(r){
+      document.getElementById('rTitle').value        = r.title        || '';
+      document.getElementById('rMovieId').value      = r.movieId      || '';
+      document.getElementById('rVideoUrl').value     = r.videoUrl     || '';
+      document.getElementById('rThumbnailUrl').value = r.thumbnailUrl || '';
+      document.getElementById('rAccessType').value   = r.accessType   || 'free';
+      document.getElementById('rVideoUrlWarn').classList.remove('visible');
+    }
+  } else {
+    ['rTitle','rMovieId','rVideoUrl','rThumbnailUrl'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('rAccessType').value='free';
+    document.getElementById('rVideoUrlWarn').classList.remove('visible');
+  }
+  document.getElementById('reelForm').scrollIntoView({behavior:'smooth'});
+};
+
+window.closeReelForm = function() { document.getElementById('reelForm').style.display='none'; editingReelId=null; };
+
+window.saveReel = async function() {
+  const videoUrl     = document.getElementById('rVideoUrl').value.trim();
+  const thumbnailUrl = document.getElementById('rThumbnailUrl').value.trim();
+  const accessType   = document.getElementById('rAccessType').value || 'free';
+  if(!videoUrl){ showToast('error','❌','Video URL is required.'); return; }
+  if(isGDriveLink(videoUrl)){ showToast('error','❌','Google Drive links are not supported. Use a direct .mp4 URL.'); document.getElementById('rVideoUrlWarn').classList.add('visible'); return; }
+  if(!isMp4Link(videoUrl)){ showToast('warn','⚠️','Video URL should be a direct .mp4 link for best compatibility.'); }
+  const data={
+    title:         document.getElementById('rTitle').value.trim()||'Short Clip',
+    movieId:       document.getElementById('rMovieId').value.trim(),
+    videoUrl,
+    thumbnailUrl,
+    accessType,
+    updatedAt:     serverTimestamp()
+  };
+  try{
+    if(editingReelId){
+      await updateDoc(doc(db,'reels',editingReelId),data);
+      showToast('success','✅','Reel updated!');
+    } else {
+      data.createdAt=serverTimestamp();
+      await addDoc(collection(db,'reels'),data);
+      showToast('success','✅','Reel added!');
+    }
+    closeReelForm(); await loadReelsAdmin();
+  }catch(e){ showToast('error','❌',e.message); }
+};
+
+window.deleteReel = async function(id) {
+  if(!confirm('Delete this reel?'))return;
+  try{await deleteDoc(doc(db,'reels',id));showToast('success','🗑️','Reel deleted.');await loadReelsAdmin();}catch(e){showToast('error','❌',e.message);}
+};
+
+// ─── TOAST ───
+function showToast(type, icon, msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<div class="toast-icon">${icon}</div><div style="flex:1;">${msg}</div>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 350); }, 4000);
+}
+
+window.showToast = showToast;
+window.loadSubscriptions = loadSubscriptions;
+</script>
+</body>
+</html>
