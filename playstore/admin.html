@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apun Store — Admin Panel</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+    </script>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen" class="hidden">
+    <div class="login-card">
+        <div class="login-logo">
+            <div class="login-logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="login-logo-text">Apun <span>Admin</span></div>
+        </div>
+        <h2 class="login-title">Admin Login</h2>
+        <p class="login-sub">Restricted access — admins only</p>
+        <div class="input-group">
+            <label class="input-label">Email</label>
+            <input type="email" id="admin-email" class="input" placeholder="admin@example.com">
+        </div>
+        <div class="input-group">
+            <label class="input-label">Password</label>
+            <input type="password" id="admin-pass" class="input" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="handleAdminLogin()">Sign In to Dashboard</button>
+        <div id="auth-error" class="hidden"></div>
+    </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div id="admin-panel" class="hidden">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">A</div>
+            <div class="sidebar-logo-text">Apun <span>Admin</span></div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Overview</div>
+            <div class="nav-link active" data-sec="dashboard" onclick="showSection('dashboard')">
+                <i class="fa fa-gauge-high"></i> Dashboard
+            </div>
+
+            <div class="nav-label">Content</div>
+            <div class="nav-link" data-sec="apps" onclick="showSection('apps')">
+                <i class="fa fa-cubes"></i> Apps
+            </div>
+            <div class="nav-link" data-sec="banners" onclick="showSection('banners')">
+                <i class="fa fa-image"></i> Banners
+            </div>
+            <div class="nav-link" data-sec="announcement" onclick="showSection('announcement')">
+                <i class="fa fa-bullhorn"></i> Announcement
+            </div>
+
+            <div class="nav-label">Monetization</div>
+            <div class="nav-link" data-sec="smartlink" onclick="showSection('smartlink')">
+                <i class="fa fa-link"></i> Smartlink / Ads
+            </div>
+
+            <div class="nav-label">Management</div>
+            <div class="nav-link" data-sec="users" onclick="showSection('users')">
+                <i class="fa fa-users"></i> Users
+            </div>
+            <div class="nav-link" data-sec="reviews" onclick="showSection('reviews')">
+                <i class="fa fa-star"></i> Reviews
+            </div>
+            <div class="nav-link" data-sec="settings" onclick="showSection('settings')">
+                <i class="fa fa-sliders"></i> Settings
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-user-row">
+                <div class="admin-avatar">A</div>
+                <div class="admin-user-info">
+                    <div class="admin-user-name" id="admin-name-display">Admin</div>
+                    <div class="admin-user-role">Super Admin</div>
+                </div>
+                <button class="btn-logout" onclick="handleAdminLogout()" title="Logout">
+                    <i class="fa fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div id="sidebar-overlay" class="hidden" onclick="closeSidebar()"></div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-content">
+        <div class="topbar">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+            <div class="topbar-title">Admin Panel</div>
+            <div style="width:32px"></div>
+        </div>
+
+        <div class="page">
+
+            <!-- ===== DASHBOARD ===== -->
+            <div id="sec-dashboard" class="section">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Dashboard</div>
+                        <div class="section-sub">Live Firebase statistics</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon">👤</div>
+                        <div class="stat-card-val" id="stat-users">—</div>
+                        <div class="stat-card-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">📦</div>
+                        <div class="stat-card-val" id="stat-apps">—</div>
+                        <div class="stat-card-label">Total Apps</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">⬇️</div>
+                        <div class="stat-card-val" id="stat-downloads">—</div>
+                        <div class="stat-card-label">Total Downloads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">🔓</div>
+                        <div class="stat-card-val" id="stat-unlocks">—</div>
+                        <div class="stat-card-label">Ad Unlocks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">⭐</div>
+                        <div class="stat-card-val" id="stat-reviews">—</div>
+                        <div class="stat-card-label">Total Reviews</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Top Downloaded Apps</div>
+                    <div id="top-apps-list"><p class="empty-msg">Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- ===== APPS ===== -->
+            <div id="sec-apps" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">App Management</div>
+                        <div class="section-sub">Add, edit, publish or remove apps</div>
+                    </div>
+                    <button class="btn-add" onclick="openAddApp()"><i class="fa fa-plus"></i> Add App</button>
+                </div>
+                <div id="apps-list"><p class="empty-msg">Loading...</p></div>
+            </div>
+
+            <!-- ===== BANNERS ===== -->
+            <div id="sec-banners" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Banner Management</div>
+                        <div class="section-sub">Manage homepage banner slides</div>
+                    </div>
+                    <button class="btn-add" onclick="openAddBanner()"><i class="fa fa-plus"></i> Add Banner</button>
+                </div>
+                <div id="banners-list"><p class="empty-msg">Loading...</p></div>
+            </div>
+
+            <!-- ===== ANNOUNCEMENT ===== -->
+            <div id="sec-announcement" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Announcement Popup</div>
+                        <div class="section-sub">Control the popup shown to users on login</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">Popup Message</label>
+                        <textarea id="ann-message" class="input" rows="4" placeholder="Enter popup message..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Popup Image URL (optional)</label>
+                        <input type="url" id="ann-image" class="input" placeholder="https://...">
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Enable Popup</div>
+                            <div class="toggle-sub">Show announcement to users on login</div>
+                        </div>
+                        <input type="checkbox" id="ann-active" class="toggle">
+                    </div>
+                    <div style="margin-top:20px">
+                        <button class="btn-save" onclick="saveAnnouncement()">Save Announcement</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SMARTLINK ===== -->
+            <div id="sec-smartlink" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Smartlink / Ad Lock</div>
+                        <div class="section-sub">Control Monetag & Adsterra ad-unlock system</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="smartlink-badge"><i class="fa fa-link"></i> Ad Unlock System</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ad Network</label>
+                        <select id="sl-network" class="input">
+                            <option value="monetag">Monetag</option>
+                            <option value="adsterra">Adsterra</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Smartlink URL</label>
+                        <input type="url" id="sl-url" class="input" placeholder="https://your-smartlink-url.com/...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Required Ad Clicks to Unlock</label>
+                        <input type="number" id="sl-count" class="input" min="1" max="20" placeholder="3">
+                    </div>
+
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Enable Smartlink System</div>
+                            <div class="toggle-sub">Activate ad-unlock before downloads</div>
+                        </div>
+                        <input type="checkbox" id="sl-enabled" class="toggle" checked>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Reward Lock</div>
+                            <div class="toggle-sub">Require ad completion before install unlocks</div>
+                        </div>
+                        <input type="checkbox" id="sl-rewardlock" class="toggle" checked>
+                    </div>
+
+                    <div style="margin-top:20px">
+                        <button class="btn-save" onclick="saveSmartlink()">Save Smartlink Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== USERS ===== -->
+            <div id="sec-users" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">User Management</div>
+                        <div class="section-sub">View, block, or manage registered users</div>
+                    </div>
+                </div>
+                <div id="users-list"><p class="empty-msg">Loading...</p></div>
+            </div>
+
+            <!-- ===== REVIEWS ===== -->
+            <div id="sec-reviews" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Reviews & Ratings</div>
+                        <div class="section-sub">Moderate user reviews across all apps</div>
+                    </div>
+                </div>
+                <div id="reviews-list"><p class="empty-msg">Loading...</p></div>
+            </div>
+
+            <!-- ===== SETTINGS ===== -->
+            <div id="sec-settings" class="section hidden">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Global Settings</div>
+                        <div class="section-sub">Control download lock, ad system, and UI text</div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Download Control</div>
+
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Enable Ad Lock</div>
+                            <div class="toggle-sub">Users must complete ads to download</div>
+                        </div>
+                        <input type="checkbox" id="set-adlock" class="toggle" checked>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Free Download Mode</div>
+                            <div class="toggle-sub">Bypass ad lock — direct install allowed</div>
+                        </div>
+                        <input type="checkbox" id="set-freedl" class="toggle">
+                    </div>
+
+                    <div class="form-group" style="margin-top:16px">
+                        <label class="form-label">Required Ad Count</label>
+                        <input type="number" id="set-adcount" class="input" min="1" max="20" placeholder="3">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">UI Text</div>
+                    <div class="form-group">
+                        <label class="form-label">Unlock Popup Title Text</label>
+                        <input type="text" id="set-popup-text" class="input" placeholder="Complete Ads To Unlock Download">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reward Message</label>
+                        <input type="text" id="set-reward-msg" class="input" placeholder="Watch ads to unlock the download.">
+                    </div>
+                </div>
+
+                <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ===== APP MODAL ===== -->
+<div id="app-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="app-form-title">Add New App</div>
+            <button class="modal-close" onclick="closeAppModal()"><i class="fa fa-xmark"></i></button>
+        </div>
+        <form id="app-form" onsubmit="return false">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">App Name *</label>
+                    <input type="text" id="af-name" class="input" placeholder="e.g. Telegram">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Developer</label>
+                    <input type="text" id="af-dev" class="input" placeholder="e.g. Telegram Inc.">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="af-category" class="input">
+                        <option value="App">App</option>
+                        <option value="Game">Game</option>
+                        <option value="Tool">Tool</option>
+                        <option value="Social">Social</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Version</label>
+                    <input type="text" id="af-version" class="input" placeholder="1.0.0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Size</label>
+                    <input type="text" id="af-size" class="input" placeholder="e.g. 45 MB">
+                </div>
+                <div class="form-group form-full">
+                    <label class="form-label">Icon URL</label>
+                    <input type="url" id="af-icon" class="input" placeholder="https://...">
+                </div>
+                <div class="form-group form-full">
+                    <label class="form-label">APK / Download URL</label>
+                    <input type="url" id="af-apk" class="input" placeholder="https://...">
+                </div>
+                <div class="form-group form-full">
+                    <label class="form-label">Description</label>
+                    <textarea id="af-desc" class="input"></textarea>
+                </div>
+                <div class="form-group form-full">
+                    <label class="form-label">Tags (comma separated)</label>
+                    <input type="text" id="af-tags" class="input" placeholder="social, messaging, free">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Screenshots</label>
+                <div id="ss-list"></div>
+                <button type="button" class="btn-sm" onclick="addSSRow('', -1)" style="margin-top:6px; color:var(--green); border-color:var(--green)">
+                    <i class="fa fa-plus"></i> Add Screenshot URL
+                </button>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-label">Featured</div>
+                <input type="checkbox" id="af-featured" class="toggle">
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-label">Trending</div>
+                <input type="checkbox" id="af-trending" class="toggle">
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-label">Published</div>
+                <input type="checkbox" id="af-published" class="toggle" checked>
+            </div>
+
+            <div style="margin-top:22px; display:flex; gap:10px">
+                <button class="btn-save" onclick="saveApp()">Save App</button>
+                <button type="button" class="btn-sm" onclick="closeAppModal()" style="padding:12px 18px">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== BANNER MODAL ===== -->
+<div id="banner-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">Banner</div>
+            <button class="modal-close" onclick="closeBannerModal()"><i class="fa fa-xmark"></i></button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Image URL *</label>
+            <input type="url" id="bf-img" class="input" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Redirect Link (optional)</label>
+            <input type="url" id="bf-link" class="input" placeholder="https://...">
+        </div>
+        <div class="toggle-row">
+            <div class="toggle-label">Active</div>
+            <input type="checkbox" id="bf-active" class="toggle" checked>
+        </div>
+        <div style="margin-top:20px; display:flex; gap:10px">
+            <button class="btn-save" onclick="saveBanner()">Save Banner</button>
+            <button class="btn-sm" onclick="closeBannerModal()" style="padding:12px 18px">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
