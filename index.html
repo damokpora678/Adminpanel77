@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #060b14; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+
+  #topbar {
+    position: fixed; top: 0; right: 0; z-index: 99999;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+  }
+  #panel-label {
+    background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.35);
+    color: #7dd3fc; font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+    text-transform: uppercase; padding: 5px 12px; border-radius: 20px;
+    backdrop-filter: blur(8px); pointer-events: none;
+  }
+  #menu-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(15,29,46,0.92); border: 1px solid rgba(14,165,233,0.3);
+    color: #e2e8f0; font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    transition: background 0.2s, border-color 0.2s; user-select: none;
+  }
+  #menu-btn:hover { background: rgba(14,165,233,0.25); border-color: rgba(14,165,233,0.6); }
+
+  #dropdown {
+    display: none; position: fixed; top: 56px; right: 14px; z-index: 99999;
+    background: rgba(12,20,32,0.97); border: 1px solid rgba(14,165,233,0.25);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7); backdrop-filter: blur(20px);
+    min-width: 220px; animation: dropIn 0.18s ease;
+  }
+  #dropdown.open { display: block; }
+  @keyframes dropIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .drop-header {
+    padding: 12px 16px 8px; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase; color: #475569;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .drop-item {
+    display: flex; align-items: center; gap: 12px; padding: 13px 18px;
+    cursor: pointer; color: #cbd5e1; font-size: 13.5px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .drop-item:last-child { border-bottom: none; }
+  .drop-item:hover { background: rgba(14,165,233,0.12); color: #7dd3fc; }
+  .drop-item.active { background: rgba(14,165,233,0.18); color: #38bdf8; }
+  .drop-item .ico { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+  .drop-item .check { margin-left: auto; color: #0ea5e9; font-size: 14px; display: none; }
+  .drop-item.active .check { display: block; }
+
+  .panel-frame {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    border: none; display: none; z-index: 1;
+  }
+  .panel-frame.active { display: block; }
+</style>
+</head>
+<body>
+
+<iframe id="frame-playstore" class="panel-frame active" src="playstore/admin.html"    title="Play Store Admin"></iframe>
+<iframe id="frame-moviezone" class="panel-frame"        src="moviezone/admin.html"    title="Movie Zone Admin"></iframe>
+<iframe id="frame-earning"   class="panel-frame"        src="earning/dashboard.html"  title="Earning Zone Admin"></iframe>
+
+<div id="topbar">
+  <span id="panel-label">Play Store Admin</span>
+  <div id="menu-btn" onclick="toggleMenu()" title="Switch Panel">⋮</div>
+</div>
+
+<div id="dropdown">
+  <div class="drop-header">Switch Panel</div>
+  <div class="drop-item active" id="item-playstore" onclick="switchPanel('playstore')">
+    <span class="ico">🎮</span> Play Store Admin <span class="check">✓</span>
+  </div>
+  <div class="drop-item" id="item-moviezone" onclick="switchPanel('moviezone')">
+    <span class="ico">🎬</span> Movie Zone Admin <span class="check">✓</span>
+  </div>
+  <div class="drop-item" id="item-earning" onclick="switchPanel('earning')">
+    <span class="ico">💰</span> Earning Zone Admin <span class="check">✓</span>
+  </div>
+</div>
+
+<script>
+  let currentPanel = 'playstore';
+  let menuOpen = false;
+  const panels = {
+    playstore: { label: 'Play Store Admin',   frame: 'frame-playstore', item: 'item-playstore' },
+    moviezone: { label: 'Movie Zone Admin',   frame: 'frame-moviezone', item: 'item-moviezone' },
+    earning:   { label: 'Earning Zone Admin', frame: 'frame-earning',   item: 'item-earning'   },
+  };
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    document.getElementById('dropdown').classList.toggle('open', menuOpen);
+  }
+  function switchPanel(key) {
+    if (key === currentPanel) { closeMenu(); return; }
+    document.getElementById(panels[currentPanel].frame).classList.remove('active');
+    document.getElementById(panels[currentPanel].item).classList.remove('active');
+    currentPanel = key;
+    document.getElementById(panels[key].frame).classList.add('active');
+    document.getElementById(panels[key].item).classList.add('active');
+    document.getElementById('panel-label').textContent = panels[key].label;
+    closeMenu();
+  }
+  function closeMenu() {
+    menuOpen = false;
+    document.getElementById('dropdown').classList.remove('open');
+  }
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('menu-btn').contains(e.target) &&
+        !document.getElementById('dropdown').contains(e.target)) closeMenu();
+  });
+</script>
+</body>
+</html>
