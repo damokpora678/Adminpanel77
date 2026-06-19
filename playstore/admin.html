@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apun Store — Admin Panel</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0c10;--surface:#111318;--surface2:#181b22;--surface3:#1e2230;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);--green:#00e676;--green-dim:#00b359;--blue:#448aff;--orange:#ff9100;--red:#ff5252;--text:#f0f2f8;--text2:#8b93a8;--text3:#5a6278;--radius:14px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,0.4);--transition:0.2s cubic-bezier(0.4,0,0.2,1)}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+.hidden{display:none!important}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 60% 30%,#0d2818 0%,var(--bg) 60%);padding:20px}
+.login-card{background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 0 80px rgba(0,230,118,0.06)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.login-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--green),var(--green-dim));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#000}
+.login-logo-text{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700}
+.login-logo-text span{color:var(--green)}
+.login-title{font-size:26px;font-weight:700;margin-bottom:6px;font-family:'Space Grotesk',sans-serif}
+.login-sub{color:var(--text2);font-size:14px;margin-bottom:32px}
+.input-group{margin-bottom:16px}
+.input-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.05em}
+.input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 16px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color var(--transition)}
+.input:focus{border-color:var(--green)}
+.input::placeholder{color:var(--text3)}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--green),var(--green-dim));color:#000;font-weight:700;font-size:15px;border:none;border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:all var(--transition);margin-top:8px}
+.btn-primary:active{transform:scale(.97)}
+#auth-error{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.3);color:var(--red);padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-top:14px}
+
+/* LAYOUT */
+#admin-panel{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+#sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:300;transition:transform var(--transition);overflow-y:auto}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--green),var(--green-dim));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#000;font-weight:700}
+.sidebar-logo-text{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700}
+.sidebar-logo-text span{color:var(--green)}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:14px 10px 6px}
+.nav-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all var(--transition);margin-bottom:2px}
+.nav-link i{width:18px;text-align:center;font-size:14px}
+.nav-link:hover{background:var(--surface2);color:var(--text)}
+.nav-link.active{background:rgba(0,230,118,.1);color:var(--green)}
+.sidebar-footer{padding:12px 10px;border-top:1px solid var(--border)}
+.admin-user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm)}
+.admin-avatar{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),#7b61ff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.admin-user-info{flex:1;min-width:0}
+.admin-user-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-user-role{font-size:10px;color:var(--green)}
+.btn-logout{background:none;border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;cursor:pointer;transition:all var(--transition);flex-shrink:0}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* MAIN */
+#main-content{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700}
+.hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer}
+.page{padding:24px;flex:1}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700}
+.section-sub{color:var(--text2);font-size:13px;margin-top:2px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:8px}
+.stat-card-icon{font-size:22px;margin-bottom:4px}
+.stat-card-val{font-size:32px;font-weight:700;font-family:'Space Grotesk',sans-serif;line-height:1}
+.stat-card-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:16px}
+
+/* ROWS */
+.app-row,.banner-row,.user-row,.review-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:border-color var(--transition)}
+.app-row:hover,.banner-row:hover,.user-row:hover{border-color:var(--border2)}
+.app-row-icon{width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+.app-row-info{flex:1;min-width:0}
+.app-row-name{font-size:14px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-row-sub{font-size:12px;color:var(--text2);margin-bottom:6px}
+.app-row-actions{display:flex;gap:8px;flex-shrink:0}
+.badge-row{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.badge-green{background:rgba(0,230,118,.12);color:var(--green)}
+.badge-blue{background:rgba(68,138,255,.12);color:var(--blue)}
+.badge-orange{background:rgba(255,145,0,.12);color:var(--orange)}
+.badge-red{background:rgba(255,82,82,.12);color:var(--red)}
+
+/* BUTTONS */
+.btn-add{background:linear-gradient(135deg,var(--green),var(--green-dim));color:#000;font-weight:700;font-size:13px;border:none;border-radius:var(--radius-sm);padding:10px 18px;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;gap:6px}
+.btn-add:active{transform:scale(.96)}
+.btn-save{background:var(--green);color:#000;font-weight:700;font-size:14px;border:none;border-radius:var(--radius-sm);padding:12px 24px;cursor:pointer;transition:all var(--transition)}
+.btn-save:active{transform:scale(.96)}
+.btn-icon{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);cursor:pointer;font-size:13px;transition:all var(--transition);background:none}
+.btn-edit{color:var(--blue)}
+.btn-edit:hover{background:rgba(68,138,255,.12);border-color:var(--blue)}
+.btn-del{color:var(--red)}
+.btn-del:hover{background:rgba(255,82,82,.12);border-color:var(--red)}
+.btn-sm{font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--border2);background:none;color:var(--text2);transition:all var(--transition)}
+.btn-sm:hover{border-color:var(--border2);color:var(--text)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.modal-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700}
+.modal-close{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition)}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-full{grid-column:1/-1}
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:block}
+select.input{cursor:pointer}
+textarea.input{resize:vertical;min-height:90px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.toggle-label{font-size:14px;font-weight:500}
+.toggle-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.toggle{position:relative;width:44px;height:24px;appearance:none;-webkit-appearance:none;background:var(--surface3);border-radius:12px;cursor:pointer;transition:background var(--transition);border:1px solid var(--border2);flex-shrink:0}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:var(--text3);border-radius:50%;top:2px;left:2px;transition:all var(--transition)}
+.toggle:checked{background:var(--green);border-color:var(--green-dim)}
+.toggle:checked::after{left:22px;background:#000}
+
+/* SS */
+.ss-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.ss-input{flex:1}
+
+/* BANNER */
+.banner-thumb{width:80px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--surface2)}
+.banner-info{flex:1;min-width:0}
+.banner-link{font-size:12px;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* USERS */
+.user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7b61ff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:14px;font-weight:600}
+.user-email{font-size:12px;color:var(--text2)}
+.user-meta{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* REVIEWS */
+.review-row{flex-direction:column;align-items:flex-start}
+.review-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.review-user{font-size:13px;font-weight:600}
+.review-app{font-size:11px;color:var(--text2)}
+.review-stars{color:#f9c74f;font-size:12px}
+.review-text{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5}
+
+/* TOP APPS */
+.top-app-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.top-app-row:last-child{border-bottom:none}
+.top-app-icon{width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+.top-app-info{flex:1;min-width:0}
+.top-app-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-app-sub{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* SETTINGS */
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.settings-section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.smartlink-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);color:var(--green);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin-bottom:14px}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:12px 24px;border-radius:40px;font-size:14px;font-weight:500;z-index:9999;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);box-shadow:var(--shadow);white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* OVERLAY */
+#sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:290;backdrop-filter:blur(2px)}
+.empty-msg{color:var(--text3);font-size:14px;text-align:center;padding:40px 0}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main-content{margin-left:0}
+  .hamburger{display:block}
+  .form-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:0 16px}
+  .page{padding:16px}
+}
+@media(max-width:400px){
+  .login-card{padding:32px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="hidden">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="login-logo-text">Apun <span>Admin</span></div>
+    </div>
+    <h2 class="login-title">Admin Login</h2>
+    <p class="login-sub">Restricted access — admins only</p>
+    <div class="input-group">
+      <label class="input-label">Email</label>
+      <input type="email" id="admin-email" class="input" placeholder="admin@example.com">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password</label>
+      <input type="password" id="admin-pass" class="input" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="handleAdminLogin()">Sign In to Dashboard</button>
+    <div id="auth-error" class="hidden"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" class="hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">A</div>
+      <div class="sidebar-logo-text">Apun <span>Admin</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Overview</div>
+      <div class="nav-link active" data-sec="dashboard" onclick="showSection('dashboard')"><i class="fa fa-gauge-high"></i> Dashboard</div>
+      <div class="nav-label">Content</div>
+      <div class="nav-link" data-sec="apps" onclick="showSection('apps')"><i class="fa fa-cubes"></i> Apps</div>
+      <div class="nav-link" data-sec="banners" onclick="showSection('banners')"><i class="fa fa-image"></i> Banners</div>
+      <div class="nav-link" data-sec="announcement" onclick="showSection('announcement')"><i class="fa fa-bullhorn"></i> Announcement</div>
+      <div class="nav-label">Monetization</div>
+      <div class="nav-link" data-sec="smartlink" onclick="showSection('smartlink')"><i class="fa fa-link"></i> Smartlink / Ads</div>
+      <div class="nav-label">Management</div>
+      <div class="nav-link" data-sec="users" onclick="showSection('users')"><i class="fa fa-users"></i> Users</div>
+      <div class="nav-link" data-sec="reviews" onclick="showSection('reviews')"><i class="fa fa-star"></i> Reviews</div>
+      <div class="nav-link" data-sec="settings" onclick="showSection('settings')"><i class="fa fa-sliders"></i> Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-user-row">
+        <div class="admin-avatar">A</div>
+        <div class="admin-user-info">
+          <div class="admin-user-name" id="admin-name-display">Admin</div>
+          <div class="admin-user-role">Super Admin</div>
+        </div>
+        <button class="btn-logout" onclick="handleAdminLogout()" title="Logout"><i class="fa fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="sidebar-overlay" class="hidden" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <div id="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+      <div class="topbar-title">Admin Panel</div>
+      <div style="width:32px"></div>
+    </div>
+    <div class="page">
+
+      <!-- DASHBOARD -->
+      <div id="sec-dashboard" class="section">
+        <div class="section-header">
+          <div><div class="section-title">Dashboard</div><div class="section-sub">Live Firebase statistics</div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-card-icon">👤</div><div class="stat-card-val" id="stat-users">—</div><div class="stat-card-label">Total Users</div></div>
+          <div class="stat-card"><div class="stat-card-icon">📦</div><div class="stat-card-val" id="stat-apps">—</div><div class="stat-card-label">Total Apps</div></div>
+          <div class="stat-card"><div class="stat-card-icon">⬇️</div><div class="stat-card-val" id="stat-downloads">—</div><div class="stat-card-label">Downloads</div></div>
+          <div class="stat-card"><div class="stat-card-icon">🔓</div><div class="stat-card-val" id="stat-unlocks">—</div><div class="stat-card-label">Ad Unlocks</div></div>
+          <div class="stat-card"><div class="stat-card-icon">⭐</div><div class="stat-card-val" id="stat-reviews">—</div><div class="stat-card-label">Reviews</div></div>
+        </div>
+        <div class="card"><div class="card-title">Top Downloaded Apps</div><div id="top-apps-list"><p class="empty-msg">Loading...</p></div></div>
+      </div>
+
+      <!-- APPS -->
+      <div id="sec-apps" class="section hidden">
+        <div class="section-header">
+          <div><div class="section-title">App Management</div><div class="section-sub">Add, edit, publish or remove apps</div></div>
+          <button class="btn-add" onclick="openAddApp()"><i class="fa fa-plus"></i> Add App</button>
+        </div>
+        <div id="apps-list"><p class="empty-msg">Loading...</p></div>
+      </div>
+
+      <!-- BANNERS -->
+      <div id="sec-banners" class="section hidden">
+        <div class="section-header">
+          <div><div class="section-title">Banner Management</div><div class="section-sub">Manage homepage banner slides</div></div>
+          <button class="btn-add" onclick="openAddBanner()"><i class="fa fa-plus"></i> Add Banner</button>
+        </div>
+        <div id="banners-list"><p class="empty-msg">Loading...</p></div>
+      </div>
+
+      <!-- ANNOUNCEMENT -->
+      <div id="sec-announcement" class="section hidden">
+        <div class="section-header"><div><div class="section-title">Announcement Popup</div><div class="section-sub">Control the popup shown to users on login</div></div></div>
+        <div class="card">
+          <div class="form-group"><label class="form-label">Popup Message</label><textarea id="ann-message" class="input" rows="4" placeholder="Enter popup message..."></textarea></div>
+          <div class="form-group"><label class="form-label">Popup Image URL (optional)</label><input type="url" id="ann-image" class="input" placeholder="https://..."></div>
+          <div class="toggle-row"><div><div class="toggle-label">Enable Popup</div><div class="toggle-sub">Show announcement to users on login</div></div><input type="checkbox" id="ann-active" class="toggle"></div>
+          <div style="margin-top:20px"><button class="btn-save" onclick="saveAnnouncement()">Save Announcement</button></div>
+        </div>
+      </div>
+
+      <!-- SMARTLINK -->
+      <div id="sec-smartlink" class="section hidden">
+        <div class="section-header"><div><div class="section-title">Smartlink / Ad Lock</div><div class="section-sub">Control Monetag & Adsterra ad-unlock system</div></div></div>
+        <div class="card">
+          <div class="smartlink-badge"><i class="fa fa-link"></i> Ad Unlock System</div>
+          <div class="form-group"><label class="form-label">Ad Network</label><select id="sl-network" class="input"><option value="monetag">Monetag</option><option value="adsterra">Adsterra</option><option value="other">Other</option></select></div>
+          <div class="form-group"><label class="form-label">Smartlink URL</label><input type="url" id="sl-url" class="input" placeholder="https://your-smartlink-url.com/..."></div>
+          <div class="form-group"><label class="form-label">Required Ad Clicks to Unlock</label><input type="number" id="sl-count" class="input" min="1" max="20" placeholder="3"></div>
+          <div class="toggle-row"><div><div class="toggle-label">Enable Smartlink System</div><div class="toggle-sub">Activate ad-unlock before downloads</div></div><input type="checkbox" id="sl-enabled" class="toggle" checked></div>
+          <div class="toggle-row"><div><div class="toggle-label">Reward Lock</div><div class="toggle-sub">Require ad completion before install unlocks</div></div><input type="checkbox" id="sl-rewardlock" class="toggle" checked></div>
+          <div style="margin-top:20px"><button class="btn-save" onclick="saveSmartlink()">Save Smartlink Settings</button></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div id="sec-users" class="section hidden">
+        <div class="section-header"><div><div class="section-title">User Management</div><div class="section-sub">View, block, or manage registered users</div></div></div>
+        <div id="users-list"><p class="empty-msg">Loading...</p></div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div id="sec-reviews" class="section hidden">
+        <div class="section-header"><div><div class="section-title">Reviews & Ratings</div><div class="section-sub">Moderate user reviews across all apps</div></div></div>
+        <div id="reviews-list"><p class="empty-msg">Loading...</p></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="sec-settings" class="section hidden">
+        <div class="section-header"><div><div class="section-title">Global Settings</div><div class="section-sub">Control download lock, ad system, and UI text</div></div></div>
+        <div class="settings-section">
+          <div class="settings-section-title">Download Control</div>
+          <div class="toggle-row"><div><div class="toggle-label">Enable Ad Lock</div><div class="toggle-sub">Users must complete ads to download</div></div><input type="checkbox" id="set-adlock" class="toggle" checked></div>
+          <div class="toggle-row"><div><div class="toggle-label">Free Download Mode</div><div class="toggle-sub">Bypass ad lock — direct install allowed</div></div><input type="checkbox" id="set-freedl" class="toggle"></div>
+          <div class="form-group" style="margin-top:16px"><label class="form-label">Required Ad Count</label><input type="number" id="set-adcount" class="input" min="1" max="20" placeholder="3"></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">UI Text</div>
+          <div class="form-group"><label class="form-label">Unlock Popup Title</label><input type="text" id="set-popup-text" class="input" placeholder="Complete Ads To Unlock Download"></div>
+          <div class="form-group"><label class="form-label">Reward Message</label><input type="text" id="set-reward-msg" class="input" placeholder="Watch ads to unlock the download."></div>
+        </div>
+        <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+      </div>
+
+    </div><!-- /page -->
+  </div><!-- /main-content -->
+</div><!-- /admin-panel -->
+
+<!-- APP MODAL -->
+<div id="app-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="app-form-title">Add New App</div>
+      <button class="modal-close" onclick="closeAppModal()"><i class="fa fa-xmark"></i></button>
+    </div>
+    <form id="app-form" onsubmit="return false">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">App Name *</label><input type="text" id="af-name" class="input" placeholder="e.g. Telegram"></div>
+        <div class="form-group"><label class="form-label">Developer</label><input type="text" id="af-dev" class="input" placeholder="e.g. Telegram Inc."></div>
+        <div class="form-group"><label class="form-label">Category</label><select id="af-category" class="input"><option value="App">App</option><option value="Game">Game</option><option value="Tool">Tool</option><option value="Social">Social</option></select></div>
+        <div class="form-group"><label class="form-label">Version</label><input type="text" id="af-version" class="input" placeholder="1.0.0"></div>
+        <div class="form-group"><label class="form-label">Size</label><input type="text" id="af-size" class="input" placeholder="e.g. 45 MB"></div>
+        <div class="form-group form-full"><label class="form-label">Icon URL</label><input type="url" id="af-icon" class="input" placeholder="https://..."></div>
+        <div class="form-group form-full"><label class="form-label">APK / Download URL</label><input type="url" id="af-apk" class="input" placeholder="https://..."></div>
+        <div class="form-group form-full"><label class="form-label">Description</label><textarea id="af-desc" class="input"></textarea></div>
+        <div class="form-group form-full"><label class="form-label">Tags (comma separated)</label><input type="text" id="af-tags" class="input" placeholder="social, messaging, free"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Screenshots</label>
+        <div id="ss-list"></div>
+        <button type="button" class="btn-sm" onclick="addSSRow('', -1)" style="margin-top:6px;color:var(--green);border-color:var(--green)"><i class="fa fa-plus"></i> Add Screenshot URL</button>
+      </div>
+      <div class="toggle-row"><div class="toggle-label">Featured</div><input type="checkbox" id="af-featured" class="toggle"></div>
+      <div class="toggle-row"><div class="toggle-label">Trending</div><input type="checkbox" id="af-trending" class="toggle"></div>
+      <div class="toggle-row"><div class="toggle-label">Published</div><input type="checkbox" id="af-published" class="toggle" checked></div>
+      <div style="margin-top:22px;display:flex;gap:10px">
+        <button class="btn-save" onclick="saveApp()">Save App</button>
+        <button type="button" class="btn-sm" onclick="closeAppModal()" style="padding:12px 18px">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- BANNER MODAL -->
+<div id="banner-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Banner</div>
+      <button class="modal-close" onclick="closeBannerModal()"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-group"><label class="form-label">Image URL *</label><input type="url" id="bf-img" class="input" placeholder="https://..."></div>
+    <div class="form-group"><label class="form-label">Redirect Link (optional)</label><input type="url" id="bf-link" class="input" placeholder="https://..."></div>
+    <div class="toggle-row"><div class="toggle-label">Active</div><input type="checkbox" id="bf-active" class="toggle" checked></div>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <button class="btn-save" onclick="saveBanner()">Save Banner</button>
+      <button class="btn-sm" onclick="closeBannerModal()" style="padding:12px 18px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAj6dcL-zPijyQSNgRNuSjrYvT9RgGUFRA",
+  authDomain: "vkcustomerapp.firebaseapp.com",
+  databaseURL: "https://vkcustomerapp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "vkcustomerapp",
+  storageBucket: "vkcustomerapp.firebasestorage.app",
+  messagingSenderId: "385333707391",
+  appId: "1:385333707391:web:209d9809484dcdf1fbb54a"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// ===== STATE =====
+let currentSection = 'dashboard';
+let editingAppId = null;
+let editingBannerId = null;
+
+// ===== NAV =====
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.remove('hidden');
+  document.querySelector('[data-sec="' + id + '"]').classList.add('active');
+  currentSection = id;
+  closeSidebar();
+  if (id === 'dashboard') loadDashboard();
+  else if (id === 'apps') loadApps();
+  else if (id === 'banners') loadBanners();
+  else if (id === 'announcement') loadAnnouncement();
+  else if (id === 'users') loadUsers();
+  else if (id === 'settings') loadSettings();
+  else if (id === 'smartlink') loadSmartlink();
+  else if (id === 'reviews') loadReviews();
+}
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('hidden');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.add('hidden');
+}
+
+// ===== DASHBOARD =====
+function loadDashboard() {
+  db.ref('users').once('value', s => { document.getElementById('stat-users').innerText = s.numChildren(); });
+  db.ref('apps').once('value', s => {
+    document.getElementById('stat-apps').innerText = s.numChildren();
+    let d = 0; s.forEach(c => { d += (c.val().downloads || 0); });
+    document.getElementById('stat-downloads').innerText = d;
+  });
+  db.ref('statistics/totalUnlocks').once('value', s => { document.getElementById('stat-unlocks').innerText = s.val() || 0; });
+  db.ref('reviews').once('value', s => {
+    let t = 0; s.forEach(a => { t += a.numChildren(); });
+    document.getElementById('stat-reviews').innerText = t;
+  });
+  db.ref('apps').orderByChild('downloads').limitToLast(5).once('value', s => {
+    const list = document.getElementById('top-apps-list');
+    list.innerHTML = '';
+    const apps = [];
+    s.forEach(c => apps.unshift({ id: c.key, ...c.val() }));
+    if (!apps.length) { list.innerHTML = '<p class="empty-msg">No apps yet.</p>'; return; }
+    apps.forEach(app => {
+      list.innerHTML += `<div class="top-app-row"><img src="${app.icon||''}" class="top-app-icon" onerror="this.src='https://placehold.co/40'"><div class="top-app-info"><div class="top-app-name">${app.name}</div><div class="top-app-sub">${app.category||''} &bull; ${app.downloads||0} downloads</div></div></div>`;
+    });
+  });
+}
+
+// ===== APPS =====
+function loadApps() {
+  db.ref('apps').off();
+  db.ref('apps').on('value', s => {
+    const list = document.getElementById('apps-list');
+    list.innerHTML = '';
+    const apps = [];
+    s.forEach(c => apps.unshift({ id: c.key, ...c.val() }));
+    if (!apps.length) { list.innerHTML = '<p class="empty-msg">No apps found.</p>'; return; }
+    apps.forEach(app => {
+      list.innerHTML += `<div class="app-row">
+        <img src="${app.icon||''}" class="app-row-icon" onerror="this.src='https://placehold.co/48'">
+        <div class="app-row-info">
+          <div class="app-row-name">${app.name}</div>
+          <div class="app-row-sub">${app.category||''} &bull; v${app.version||'1.0'} &bull; ${app.size||''}</div>
+          <div class="badge-row">
+            ${app.featured?'<span class="badge badge-blue">Featured</span>':''}
+            ${app.trending?'<span class="badge badge-orange">Trending</span>':''}
+            ${app.published===false?'<span class="badge badge-red">Unpublished</span>':'<span class="badge badge-green">Published</span>'}
+          </div>
+        </div>
+        <div class="app-row-actions">
+          <button class="btn-icon btn-edit" onclick="openEditApp('${app.id}')"><i class="fa fa-pen"></i></button>
+          <button class="btn-icon btn-del" onclick="deleteApp('${app.id}')"><i class="fa fa-trash"></i></button>
+        </div>
+      </div>`;
+    });
+  });
+}
+function openAddApp() {
+  editingAppId = null;
+  document.getElementById('app-form-title').innerText = 'Add New App';
+  document.getElementById('app-form').reset();
+  document.getElementById('ss-list').innerHTML = '';
+  document.getElementById('app-modal').classList.remove('hidden');
+}
+function openEditApp(id) {
+  editingAppId = id;
+  document.getElementById('app-form-title').innerText = 'Edit App';
+  db.ref('apps/' + id).once('value', s => {
+    const app = s.val();
+    document.getElementById('af-name').value = app.name||'';
+    document.getElementById('af-dev').value = app.dev||'';
+    document.getElementById('af-category').value = app.category||'App';
+    document.getElementById('af-icon').value = app.icon||'';
+    document.getElementById('af-apk').value = app.apk||'';
+    document.getElementById('af-size').value = app.size||'';
+    document.getElementById('af-version').value = app.version||'';
+    document.getElementById('af-desc').value = app.desc||'';
+    document.getElementById('af-tags').value = (app.tags||[]).join(', ');
+    document.getElementById('af-featured').checked = !!app.featured;
+    document.getElementById('af-trending').checked = !!app.trending;
+    document.getElementById('af-published').checked = app.published !== false;
+    document.getElementById('ss-list').innerHTML = '';
+    (app.screenshots||[]).forEach(url => addSSRow(url));
+    document.getElementById('app-modal').classList.remove('hidden');
+  });
+}
+function closeAppModal() { document.getElementById('app-modal').classList.add('hidden'); }
+function addSSRow(val) {
+  const div = document.createElement('div');
+  div.className = 'ss-row';
+  div.innerHTML = `<input type="text" class="input ss-input" placeholder="Screenshot URL" value="${val||''}"><button class="btn-icon btn-del" onclick="this.parentElement.remove()"><i class="fa fa-times"></i></button>`;
+  document.getElementById('ss-list').appendChild(div);
+}
+function saveApp() {
+  const name = document.getElementById('af-name').value.trim();
+  if (!name) { alert('App name required'); return; }
+  const screenshots = [...document.querySelectorAll('.ss-input')].map(i => i.value.trim()).filter(Boolean);
+  const tags = document.getElementById('af-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const data = {
+    name, dev: document.getElementById('af-dev').value.trim(),
+    category: document.getElementById('af-category').value,
+    icon: document.getElementById('af-icon').value.trim(),
+    apk: document.getElementById('af-apk').value.trim(),
+    size: document.getElementById('af-size').value.trim(),
+    version: document.getElementById('af-version').value.trim(),
+    desc: document.getElementById('af-desc').value.trim(),
+    tags, screenshots,
+    featured: document.getElementById('af-featured').checked,
+    trending: document.getElementById('af-trending').checked,
+    published: document.getElementById('af-published').checked,
+    updatedAt: Date.now()
+  };
+  if (!editingAppId) { data.rating = 0; data.downloads = 0; data.createdAt = Date.now(); }
+  const ref = editingAppId ? db.ref('apps/' + editingAppId) : db.ref('apps').push();
+  (editingAppId ? ref.update(data) : ref.set(data)).then(() => { closeAppModal(); showToast('App saved!'); }).catch(e => alert(e.message));
+}
+function deleteApp(id) {
+  if (!confirm('Delete this app?')) return;
+  db.ref('apps/' + id).remove().then(() => showToast('App deleted.'));
+}
+
+// ===== BANNERS =====
+function loadBanners() {
+  db.ref('banners').off();
+  db.ref('banners').on('value', s => {
+    const list = document.getElementById('banners-list');
+    list.innerHTML = '';
+    const banners = [];
+    s.forEach(c => banners.push({ id: c.key, ...c.val() }));
+    if (!banners.length) { list.innerHTML = '<p class="empty-msg">No banners.</p>'; return; }
+    banners.forEach(b => {
+      list.innerHTML += `<div class="banner-row">
+        <img src="${b.img||''}" class="banner-thumb" onerror="this.src='https://placehold.co/80x40'">
+        <div class="banner-info"><div class="banner-link">${b.link||'No link'}</div><span class="badge ${b.active!==false?'badge-green':'badge-red'}">${b.active!==false?'Active':'Disabled'}</span></div>
+        <div class="app-row-actions">
+          <button class="btn-icon btn-edit" onclick="openEditBanner('${b.id}')"><i class="fa fa-pen"></i></button>
+          <button class="btn-icon btn-del" onclick="deleteBanner('${b.id}')"><i class="fa fa-trash"></i></button>
+        </div>
+      </div>`;
+    });
+  });
+}
+function openAddBanner() {
+  editingBannerId = null;
+  document.getElementById('bf-img').value = '';
+  document.getElementById('bf-link').value = '';
+  document.getElementById('bf-active').checked = true;
+  document.getElementById('banner-modal').classList.remove('hidden');
+}
+function openEditBanner(id) {
+  editingBannerId = id;
+  db.ref('banners/' + id).once('value', s => {
+    const b = s.val();
+    document.getElementById('bf-img').value = b.img||'';
+    document.getElementById('bf-link').value = b.link||'';
+    document.getElementById('bf-active').checked = b.active !== false;
+    document.getElementById('banner-modal').classList.remove('hidden');
+  });
+}
+function closeBannerModal() { document.getElementById('banner-modal').classList.add('hidden'); }
+function saveBanner() {
+  const img = document.getElementById('bf-img').value.trim();
+  if (!img) { alert('Image URL required'); return; }
+  const data = { img, link: document.getElementById('bf-link').value.trim(), active: document.getElementById('bf-active').checked };
+  const ref = editingBannerId ? db.ref('banners/' + editingBannerId) : db.ref('banners').push();
+  (editingBannerId ? ref.update(data) : ref.set(data)).then(() => { closeBannerModal(); showToast('Banner saved!'); }).catch(e => alert(e.message));
+}
+function deleteBanner(id) {
+  if (!confirm('Delete banner?')) return;
+  db.ref('banners/' + id).remove().then(() => showToast('Banner deleted.'));
+}
+
+// ===== ANNOUNCEMENT =====
+function loadAnnouncement() {
+  db.ref('announcement').once('value', s => {
+    const d = s.val() || {};
+    document.getElementById('ann-message').value = d.message||'';
+    document.getElementById('ann-image').value = d.image||'';
+    document.getElementById('ann-active').checked = !!d.active;
+  });
+}
+function saveAnnouncement() {
+  const data = { message: document.getElementById('ann-message').value.trim(), image: document.getElementById('ann-image').value.trim(), active: document.getElementById('ann-active').checked, updatedAt: Date.now() };
+  db.ref('announcement').set(data).then(() => showToast('Announcement saved!')).catch(e => alert(e.message));
+}
+
+// ===== USERS =====
+function loadUsers() {
+  db.ref('users').off();
+  db.ref('users').on('value', s => {
+    const list = document.getElementById('users-list');
+    list.innerHTML = '';
+    const users = [];
+    s.forEach(c => users.push({ id: c.key, ...c.val() }));
+    if (!users.length) { list.innerHTML = '<p class="empty-msg">No users registered yet.</p>'; return; }
+    users.forEach(u => {
+      list.innerHTML += `<div class="user-row">
+        <div class="user-avatar">${(u.name||u.email||'U')[0].toUpperCase()}</div>
+        <div class="user-info"><div class="user-name">${u.name||'Unknown'}</div><div class="user-email">${u.email||''}</div><div class="user-meta">Downloads: ${u.downloads||0} &bull; Unlocks: ${u.unlocks||0}</div></div>
+        <div class="app-row-actions">${u.blocked?`<button class="btn-sm" style="color:var(--green);border-color:var(--green)" onclick="toggleBlock('${u.id}',false)">Unblock</button>`:`<button class="btn-sm" style="color:var(--red);border-color:var(--red)" onclick="toggleBlock('${u.id}',true)">Block</button>`}</div>
+      </div>`;
+    });
+  });
+}
+function toggleBlock(uid, block) {
+  db.ref('users/' + uid).update({ blocked: block }).then(() => showToast(block ? 'User blocked.' : 'User unblocked.'));
+}
+
+// ===== SETTINGS =====
+function loadSettings() {
+  db.ref('settings').once('value', s => {
+    const d = s.val() || {};
+    document.getElementById('set-adlock').checked = d.adLockEnabled !== false;
+    document.getElementById('set-freedl').checked = !!d.freeDownload;
+    document.getElementById('set-adcount').value = d.requiredAdCount || 3;
+    document.getElementById('set-popup-text').value = d.unlockPopupText || 'Complete Ads To Unlock Download';
+    document.getElementById('set-reward-msg').value = d.rewardMessage || 'Watch ads to unlock the download.';
+  });
+}
+function saveSettings() {
+  const data = {
+    adLockEnabled: document.getElementById('set-adlock').checked,
+    freeDownload: document.getElementById('set-freedl').checked,
+    requiredAdCount: parseInt(document.getElementById('set-adcount').value) || 3,
+    unlockPopupText: document.getElementById('set-popup-text').value.trim(),
+    rewardMessage: document.getElementById('set-reward-msg').value.trim(),
+    updatedAt: Date.now()
+  };
+  db.ref('settings').update(data).then(() => showToast('Settings saved!')).catch(e => alert(e.message));
+}
+
+// ===== SMARTLINK =====
+function loadSmartlink() {
+  db.ref('settings/adlock').once('value', s => {
+    const d = s.val() || {};
+    document.getElementById('sl-url').value = d.smartlinkUrl || '';
+    document.getElementById('sl-network').value = d.network || 'monetag';
+    document.getElementById('sl-count').value = d.requiredCount || 3;
+    document.getElementById('sl-enabled').checked = d.enabled !== false;
+    document.getElementById('sl-rewardlock').checked = d.rewardLock !== false;
+  });
+}
+function saveSmartlink() {
+  const data = {
+    smartlinkUrl: document.getElementById('sl-url').value.trim(),
+    network: document.getElementById('sl-network').value,
+    requiredCount: parseInt(document.getElementById('sl-count').value) || 3,
+    enabled: document.getElementById('sl-enabled').checked,
+    rewardLock: document.getElementById('sl-rewardlock').checked,
+    updatedAt: Date.now()
+  };
+  db.ref('settings/adlock').update(data).then(() => showToast('Smartlink settings saved!')).catch(e => alert(e.message));
+}
+
+// ===== REVIEWS =====
+function loadReviews() {
+  db.ref('apps').once('value', appsSnap => {
+    const apps = appsSnap.val() || {};
+    const container = document.getElementById('reviews-list');
+    container.innerHTML = '';
+    let hasAny = false;
+    const appIds = Object.keys(apps);
+    let pending = appIds.length;
+    if (!pending) { container.innerHTML = '<p class="empty-msg">No apps found.</p>'; return; }
+    appIds.forEach(appId => {
+      db.ref('apps/' + appId + '/reviews').once('value', revSnap => {
+        const reviews = revSnap.val() || {};
+        Object.entries(reviews).forEach(([uid, rev]) => {
+          hasAny = true;
+          container.innerHTML += `<div class="review-row">
+            <div class="review-meta"><span class="review-user">${rev.userName||'Anon'}</span><span class="review-app">App: ${apps[appId].name}</span><span class="review-stars">${'★'.repeat(rev.rating||0)}</span></div>
+            <div class="review-text">${rev.comment||''}</div>
+            <button class="btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteReview('${appId}','${uid}')">Delete</button>
+          </div>`;
+        });
+        pending--;
+        if (pending === 0 && !hasAny) container.innerHTML = '<p class="empty-msg">No reviews yet.</p>';
+      });
+    });
+  });
+}
+function deleteReview(appId, uid) {
+  if (!confirm('Delete this review?')) return;
+  db.ref('apps/' + appId + '/reviews/' + uid).remove().then(() => { showToast('Review deleted.'); loadReviews(); });
+}
+
+// ===== AUTH =====
+function handleAdminLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const pass = document.getElementById('admin-pass').value;
+  if (!email || !pass) { showAuthError('Enter email and password.'); return; }
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(res => db.ref('admins/' + res.user.uid).once('value'))
+    .then(snap => {
+      if (!snap.exists() || snap.val() !== true) {
+        auth.signOut();
+        showAuthError('Access denied. Not an admin account.');
+        return;
+      }
+      showAdminPanel(auth.currentUser);
+    })
+    .catch(e => showAuthError(e.message));
+}
+function handleAdminLogout() {
+  if (!confirm('Logout from Admin Panel?')) return;
+  auth.signOut().then(() => {
+    document.getElementById('admin-panel').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+  });
+}
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.innerText = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
+}
+function showAdminPanel(user) {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('admin-panel').classList.remove('hidden');
+  document.getElementById('admin-name-display').innerText = user.displayName || user.email;
+  showSection('dashboard');
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function () {
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('admin-panel').classList.add('hidden');
+      return;
+    }
+    db.ref('admins/' + user.uid).once('value').then(snap => {
+      if (snap.exists() && snap.val() === true) {
+        showAdminPanel(user);
+      } else {
+        auth.signOut();
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('admin-panel').classList.add('hidden');
+        showAuthError('Access denied.');
+      }
+    });
+  });
+  document.getElementById('admin-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleAdminLogin(); });
+  document.getElementById('admin-pass').addEventListener('keydown', e => { if (e.key === 'Enter') handleAdminLogin(); });
+});
+</script>
+</body>
+</html>
